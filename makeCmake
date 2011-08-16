@@ -29,9 +29,6 @@
 #     Build script for cmake
 #
 #------------------------------------------------------------------------------
-cmakePACKAGE=cmake-2.8.3
-
-#------------------------------------------------------------------------------
 # run from third-party directory only
 wmakeCheckPwd "$WM_THIRD_PARTY_DIR" || {
     echo "Error: Current directory is not \$WM_THIRD_PARTY_DIR"
@@ -40,6 +37,10 @@ wmakeCheckPwd "$WM_THIRD_PARTY_DIR" || {
     exit 1
 }
 . etc/tools/ThirdPartyFunctions
+#------------------------------------------------------------------------------
+
+cmakePACKAGE=`. etc/defaults.sh ; echo \$cmake_version`
+
 #------------------------------------------------------------------------------
 
 usage() {

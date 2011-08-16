@@ -1,0 +1,135 @@
+#!/bin/sh
+#------------------------------------------------------------------------------
+# License
+#
+#     This file is part of the branch "get-em" available here:
+#         https://github.com/wyldckat/ThirdParty-2.0.x/commits/get-em
+#
+#     These modifications are not endorsed by OpenCFD Ltd.
+#
+#     It's licensed under the same license of the target software, namely GPL
+#   v3 or above (see <http://www.gnu.org/licenses/>).
+#
+#     The target software is OpenFOAM(R) <http://www.openfoam.com>, which is
+#   trademarked by and Copyright (C) OpenCFD Ltd.
+#
+# File
+#     etc/tools/get-em/cmake
+#
+# Description
+#     This script will gather the necessary information about the application.
+#     This script expects to be executed in the base folder where the get-em script is.
+#
+# FIXME
+#   * Currently it is hard-coded to use tar.gz.
+#
+#------------------------------------------------------------------------------
+
+#these two might come in handy
+Script=${0##*/}
+path2Script=${0%/*}
+testFile="$Script.dumpfile.$$"
+
+usage() {
+    exec 1>&2
+    while [ "$#" -ge 1 ]; do echo "$1"; shift; done
+    cat<<USAGE
+
+Usage
+    Must be executed from the ThirdParty folder and OpenFOAM's environment
+  must be active. Usage:
+     $Script description
+     $Script versions MIRROR_URL
+     $Script geturl MIRROR_URL VERSION
+     $Script getversion MIRROR_URL VERSION
+     $Script getfilename VERSION
+     $Script cache VERSION
+
+Valid options (use only one per command)
+  description - show the description for this application.
+  versions MIRROR_URL - show the list of versions available for this application.
+  geturl MIRROR_URL VERSION - get the link for the desired version to download.
+  getversion MIRROR_URL VERSION - get the true version.
+  getfilename VERSION - get the filename for the desired version (true version only).
+  verifyfile VERSION - verify if the package's integrity for the desired version (true version only).
+  cache VERSION - check if the version is already downloaded. Shows YES if available.
+
+USAGE
+    exit 1
+}
+
+getMajorVersion()
+{
+  echo $1 | sed -e 's=\(^[0-9]\.[0-9]\).*=\1='
+}
+
+[ "$#" -eq 0 ] && usage "Missing any options."
+
+case $1 in
+description)
+  echo "cmake - Retrieve CMake source code. Size: 3 to 6MB"
+  break
+  ;;
+versions)
+  [ "$#" -le 1 ] && usage "Missing MIRROR_URL for version listing."
+  #first check available major versions
+  wget "$2" -O $testFile > /dev/null 2>&1
+  LIST_MAJOR_VERSIONS=`grep -e "v[2-9]\.[0-9]/" $testFile | sed -e 's=.*>\(v.*/\)</a.*=\1=' -e 's=/==' -e 's=v==' | sort -u`
+
+  #now cycle through the major versions and list the available minor versions
+  for mjv in $LIST_MAJOR_VERSIONS; do
+    wget "$2/v$mjv/" -O $testFile > /dev/null 2>&1
+    grep -e "cmake-[0-9]\.[0-9]\.[0-9]\.tar.gz" $testFile | sed -e 's=.*>\(cmake-.*\)\.tar.gz<.*=\1=' -e 's_-_=_' | sort -u
+  done
+
+  rm $testFile
+  break
+  ;;
+geturl)
+  [ "$#" -le 2 ] && usage "Missing MIRROR_URL and/or VERSION for url retrieval."
+  VERSION=`$0 getversion $2 $3`
+  MAJORVERSION=`getMajorVersion $3`
+  echo ${2}v$MAJORVERSION/cmake-$VERSION.tar.gz
+  break
+  ;;
+getversion)
+  [ "$#" -le 2 ] && usage "Missing MIRROR_URL and/or VERSION for true version retrieval."
+  case $3 in
+  default)
+    VERSION=`. etc/defaults.sh ; echo \$cmake_version | sed 's/cmake-//'`
+    break
+    ;;
+  latest)
+    VERSION=`$0 versions $2 | tail -n 1 | sed -e 's/cmake=//'`
+    break
+    ;;
+  *)
+    VERSION=$3
+    break
+    ;;
+  esac
+  echo $VERSION
+  break
+  ;;
+getfilename)
+  [ "$#" -le 1 ] && usage "Missing VERSION for version listing."
+  echo cmake-$2.tar.gz
+  break
+  ;;
+verifyfile)
+  [ "$#" -le 1 ] && usage "Missing VERSION for version listing."
+  FILENAME=`$0 getfilename $2`
+  [ -r download/$FILENAME.complete ] && rm download/$FILENAME.complete
+  tar -tzf download/$FILENAME > /dev/null 2>&1 && touch download/$FILENAME.complete && echo "OK"
+  break
+  ;;
+cache)
+  [ "$#" -le 1 ] && usage "Missing VERSION for version listing."
+  FILENAME=`$0 getfilename $2`
+  [ -r download/$FILENAME.complete ] && echo "YES"
+  break
+  ;;
+*)
+  usage "Invalid option '$1'"
+  ;;
+esac

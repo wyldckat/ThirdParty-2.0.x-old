@@ -37,9 +37,6 @@
 #        cd -
 #
 #------------------------------------------------------------------------------
-llvmPACKAGE=llvm-svn
-
-#------------------------------------------------------------------------------
 # run from third-party directory only
 wmakeCheckPwd "$WM_THIRD_PARTY_DIR" || {
     echo "Error: Current directory is not \$WM_THIRD_PARTY_DIR"
@@ -50,6 +47,9 @@ wmakeCheckPwd "$WM_THIRD_PARTY_DIR" || {
 . etc/tools/ThirdPartyFunctions
 #------------------------------------------------------------------------------
 
+llvmPACKAGE=`. etc/defaults.sh ; echo \$clang_version`
+
+#------------------------------------------------------------------------------
 usage() {
     exec 1>&2
     while [ "$#" -ge 1 ]; do echo "$1"; shift; done

@@ -32,12 +32,6 @@
 #     gcc 4.3.2 is known to miscompile GMP 4.3.x on 64-bit machines
 #
 #------------------------------------------------------------------------------
-gmpPACKAGE=gmp-5.0.1
-mpfrPACKAGE=mpfr-2.4.2
-mpcPACKAGE=mpc-0.8.1
-gccPACKAGE=gcc-4.5.1
-
-#------------------------------------------------------------------------------
 # run from third-party directory only
 wmakeCheckPwd "$WM_THIRD_PARTY_DIR" || {
     echo "Error: Current directory is not \$WM_THIRD_PARTY_DIR"
@@ -46,6 +40,14 @@ wmakeCheckPwd "$WM_THIRD_PARTY_DIR" || {
     exit 1
 }
 . etc/tools/ThirdPartyFunctions
+#------------------------------------------------------------------------------
+
+#use true default versions
+gmpPACKAGE=`. etc/defaults.sh ; echo \$gmp_version`
+mpfrPACKAGE=`. etc/defaults.sh ; echo \$mpfr_version`
+mpcPACKAGE=`. etc/defaults.sh ; echo \$mpc_version`
+gccPACKAGE=`. etc/defaults.sh ; echo \$gcc_version`
+
 #------------------------------------------------------------------------------
 
 usage() {

@@ -29,9 +29,6 @@
 #     Build script for qt-everywhere-opensource-src
 #
 #------------------------------------------------------------------------------
-qtVERSION=4.7.3
-qtTYPE=qt-everywhere-opensource-src
-#------------------------------------------------------------------------------
 # run from third-party directory only
 wmakeCheckPwd "$WM_THIRD_PARTY_DIR" || {
     echo "Error: Current directory is not \$WM_THIRD_PARTY_DIR"
@@ -41,6 +38,11 @@ wmakeCheckPwd "$WM_THIRD_PARTY_DIR" || {
 }
 . etc/tools/ThirdPartyFunctions
 . etc/tools/QtFunctions
+#------------------------------------------------------------------------------
+
+qtVERSION=`. etc/defaults.sh ; echo \$qt_version`
+qtTYPE=qt-everywhere-opensource-src
+
 #------------------------------------------------------------------------------
 
 usage() {

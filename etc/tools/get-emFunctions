@@ -1,0 +1,91 @@
+#---------------------------------*- sh -*-------------------------------------
+# License
+#
+#     This file is part of the branch "get-em" available here:
+#         https://github.com/wyldckat/ThirdParty-2.0.x/commits/get-em
+#
+#     These modifications are not endorsed by OpenCFD Ltd.
+#
+#     It's licensed under the same license of the target software, namely GPL
+#   v3 or above (see <http://www.gnu.org/licenses/>).
+#
+#     The target software is OpenFOAM(R) <http://www.openfoam.com>, which is
+#   trademarked by and Copyright (C) OpenCFD Ltd.
+#
+# File
+#     get-emFunctions
+#
+# Description
+#     Functions for the script get-em.
+#
+#------------------------------------------------------------------------------
+
+PATH_TO_GE_SCRIPTS="etc/tools/get-em"
+GE_VALID_APPS=""
+
+
+#
+# save the list of valid applications into the variable GE_VALID_APPS
+#
+listValidApps()
+{
+  GE_VALID_APPS=`ls -1 $PATH_TO_GE_SCRIPTS/* | grep -ve "\." | sed 's=.*/==g'`
+}
+
+
+#
+# show the list of applications that can be downloaded and unpacked
+#
+displayValidApps()
+{
+  for app in $GE_VALID_APPS; do
+    echo `$PATH_TO_GE_SCRIPTS/$app description`
+  done
+}
+
+
+#
+# Checks if the app is valid or not
+#
+isValidApp()
+{
+  for app in $GE_VALID_APPS; do
+    if [ "app" = "$1" ]; then
+      echo "VALID"
+      break
+    fi
+  done
+}
+
+
+#
+# Get a mirror URL from the file $APP.mirrors
+# TODO: ability to pick any mirror from the list
+#
+getMirrorForApp()
+{
+  if [ -r $PATH_TO_GE_SCRIPTS/$1.mirrors ]; then
+    head -n 1 $PATH_TO_GE_SCRIPTS/$1.mirrors
+  else
+    usage "No mirrors available for application '$1'."
+  fi
+}
+
+
+#
+# show the list of versions available for this application that can be downloaded and unpacked
+#
+displayVersionsForApp()
+{
+  if [ -n `isValidApp $1` ]; then
+    $PATH_TO_GE_SCRIPTS/$1 versions `getMirrorForApp $1`
+  else
+    usage "Application '$1' is invalid."
+  fi
+}
+
+
+#retrieve a list of valid applications - list saved in "GE_VALID_APPS"
+listValidApps
+
+# ----------------------------------------------------------------- end-of-file
