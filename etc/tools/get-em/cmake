@@ -28,6 +28,7 @@
 #these two might come in handy
 Script=${0##*/}
 path2Script=${0%/*}
+versionCacheFile=$path2Script/$Script.cache
 testFile="$Script.dumpfile.$$"
 
 usage() {
@@ -47,6 +48,7 @@ Usage
 
 Valid options (use only one per command)
   description - show the description for this application.
+  update MIRROR_URL - updates the list of versions available.
   versions MIRROR_URL - show the list of versions available for this application.
   geturl MIRROR_URL VERSION - get the link for the desired version to download.
   getversion MIRROR_URL VERSION - get the true version.
@@ -70,19 +72,27 @@ description)
   echo "cmake - Retrieve CMake source code. Size: 3 to 6MB"
   break
   ;;
-versions)
+update)
   [ "$#" -le 1 ] && usage "Missing MIRROR_URL for version listing."
-  #first check available major versions
+  #first check available major versions (>=2.6)
   wget "$2" -O $testFile > /dev/null 2>&1
-  LIST_MAJOR_VERSIONS=`grep -e "v[2-9]\.[0-9]/" $testFile | sed -e 's=.*>\(v.*/\)</a.*=\1=' -e 's=/==' -e 's=v==' | sort -u`
+  LIST_MAJOR_VERSIONS=`grep -e "v[2-9]\.[0-9]/" $testFile | sed -e 's=.*>\(v.*/\)</a.*=\1=' -e 's=/==' -e 's=v==' | grep -v -e "^2\.[0-5]" | sort -u`
+  [ -r "$versionCacheFile" ] && rm $versionCacheFile
 
   #now cycle through the major versions and list the available minor versions
   for mjv in $LIST_MAJOR_VERSIONS; do
     wget "$2/v$mjv/" -O $testFile > /dev/null 2>&1
-    grep -e "cmake-[0-9]\.[0-9]\.[0-9]\.tar.gz" $testFile | sed -e 's=.*>\(cmake-.*\)\.tar.gz<.*=\1=' -e 's_-_=_' | sort -u
+    grep -e "cmake-[0-9]\.[0-9]\.[0-9]\.tar.gz" $testFile | sed -e 's=.*>\(cmake-.*\)\.tar.gz<.*=\1=' -e 's_-_=_' | sort -u >> $versionCacheFile
   done
 
   rm $testFile
+  break
+  ;;
+versions)
+  [ "$#" -le 1 ] && usage "Missing MIRROR_URL for version listing."
+  [ ! -r "$versionCacheFile" ] && $0 update $2 $3 #force an update
+  [ ! -r "$versionCacheFile" ] && usage "Unable to update the list of versions"
+  cat $versionCacheFile
   break
   ;;
 geturl)

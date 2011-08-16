@@ -63,7 +63,8 @@ Usage
     Must be executed from the ThirdParty folder and OpenFOAM's environment
   must be active. Usage:
      ./$Script li(st)
-     ./$Script ve(rsions) APPLICATION
+     ./$Script up(date) [APPLICATION]
+     ./$Script ve(rsions) [APPLICATION]
      ./$Script ca(che) [APPLICATION]
      ./$Script so(urce) APPLICATION1=VERSION [APPLICATION2=VERSION] [...]
      ./$Script do(wnload) APPLICATION1=VERSION [APPLICATION2=VERSION] [...]
@@ -71,7 +72,8 @@ Usage
 
 Valid options (use only one per command)
   list     : shows a list of the retrievable software applications.
-  versions : shows the list of available versions for the selected application.
+  update   : updates the cached lists of available versions for the selected application, or all if none specified.
+  versions : shows the list of available versions for the selected application, or all if none specified.
   cache    : shows the list of already downloaded packages.
   install  : download (if necessary) and unpack the desired applications and respective versions.
   download : download (if necessary) the desired applications and respective versions.
@@ -99,6 +101,7 @@ USAGE
 #secure local variables
 listOpt=0
 versionsOpt=0
+updateOpt=0
 cacheOpt=0
 downloadOpt=0
 unpackOpt=0
@@ -110,6 +113,9 @@ h | he | help | -h | -help)
     ;;
 li | list)
     listOpt=1
+    ;;
+up | update)
+    updateOpt=1
     ;;
 ve | versions)
     versionsOpt=1
@@ -138,12 +144,24 @@ if [ $listOpt -eq 1 ]; then
   [ "$#" -gt 1 ] && usage "Too many arguments..."
   displayValidApps
 
+elif [ $updateOpt -eq 1 ]; then
+
+  [ "$#" -gt 2 ] && usage "Too many arguments..."
+  if [ "$#" -eq 2 ]; then
+    updateVersion $2
+  else
+    updateVersions
+  fi
+
 elif [ $versionsOpt -eq 1 ]; then
 
-  [ "$#" -le 1 ] && usage "Missing APPLICATION for version listing."
   [ "$#" -gt 2 ] && usage "Too many arguments..."
 
-  displayVersionsForApp $2
+  if [ "$#" -eq 2 ]; then
+    displayVersionsForApp $2
+  else
+    displayVersionsForAll
+  fi
 
 elif [ $cacheOpt -eq 1 ]; then
 

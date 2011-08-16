@@ -28,6 +28,7 @@
 #these two might come in handy
 Script=${0##*/}
 path2Script=${0%/*}
+versionCacheFile=$path2Script/$Script.cache
 testFile="$Script.dumpfile.$$"
 
 usage() {
@@ -47,6 +48,7 @@ Usage
 
 Valid options (use only one per command)
   description - show the description for this application.
+  update MIRROR_URL - updates the list of versions available.
   versions MIRROR_URL - show the list of versions available for this application.
   geturl MIRROR_URL VERSION - get the link for the desired version to download.
   getversion MIRROR_URL VERSION - get the true version.
@@ -63,6 +65,20 @@ USAGE
 case $1 in
 description)
   echo "gcc - Retrieve the whole gcc package (gcc, g++, ada, fortran, go, java, objc). Size: 60 to 100MB"
+  break
+  ;;
+update)
+  [ "$#" -le 1 ] && usage "Missing MIRROR_URL for version listing."
+  wget "$2" -O $testFile > /dev/null 2>&1
+  grep -e "gcc-[4]\.[3-9]\.[0-9]" $testFile | sed -e 's=.*>\(gcc-.*\)<.*=\1=' -e 's=/==' -e 's_-_=_' | grep -e "[0-9]\.[0-9]\.[0-9]$" | sort -u > $versionCacheFile
+  rm $testFile
+  break
+  ;;
+versions)
+  [ "$#" -le 1 ] && usage "Missing MIRROR_URL for version listing."
+  [ ! -r "$versionCacheFile" ] && $0 update $2 $3 #force an update
+  [ ! -r "$versionCacheFile" ] && usage "Unable to update the list of versions"
+  cat $versionCacheFile
   break
   ;;
 versions)

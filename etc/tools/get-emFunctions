@@ -73,6 +73,27 @@ getMirrorForApp()
 
 
 #
+# update the list of versions available for this application that can be downloaded and unpacked
+#
+updateVersion()
+{
+  echo "Updating versions for application '$1'..."
+  $PATH_TO_GE_SCRIPTS/$1 update `getMirrorForApp $1`
+}
+
+
+#
+# update the list of versions available for all applications that can be downloaded and unpacked
+#
+updateVersions()
+{
+  for app in $GE_VALID_APPS; do
+    updateVersion $app
+  done
+}
+
+
+#
 # show the list of versions available for this application that can be downloaded and unpacked
 #
 displayVersionsForApp()
@@ -84,6 +105,16 @@ displayVersionsForApp()
   fi
 }
 
+
+#
+# show the list of versions available for all applications that can be downloaded and unpacked
+#
+displayVersionsForAll()
+{
+  for app in $GE_VALID_APPS; do
+    displayVersionsForApp $app
+  done
+}
 
 #retrieve a list of valid applications - list saved in "GE_VALID_APPS"
 listValidApps
