@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/sh
 #------------------------------------------------------------------------------
 # License
 #
@@ -72,8 +72,8 @@ Usage
 
 Valid options (use only one per command)
   list     : shows a list of the retrievable software applications.
-  update   : updates the cached lists of available versions for the selected application, or all if none specified.
-  versions : shows the list of available versions for the selected application, or all if none specified.
+  update   : updates the cached lists of available versions.
+  versions : shows the list of available versions.
   cache    : shows the list of already downloaded packages.
   install  : download (if necessary) and unpack the desired applications and respective versions.
   download : download (if necessary) the desired applications and respective versions.
@@ -165,7 +165,13 @@ elif [ $versionsOpt -eq 1 ]; then
 
 elif [ $cacheOpt -eq 1 ]; then
 
-  :
+  [ "$#" -gt 2 ] && usage "Too many arguments..."
+
+  if [ "$#" -eq 2 ]; then
+    displayCacheForApp $2
+  else
+    displayCacheForAll
+  fi
 
 elif [ $downloadOpt -eq 1 -o $unpackOpt -eq 1 ]; then
 

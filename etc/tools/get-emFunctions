@@ -116,6 +116,37 @@ displayVersionsForAll()
   done
 }
 
+
+#
+# show the list of versions already fully downloaded for the chosen application
+#
+displayCacheForApp()
+{
+  if [ -n `isValidApp $1` ]; then
+    MIRRORURL=`getMirrorForApp $1`
+    VERSIONS_AVAILABLE=`$PATH_TO_GE_SCRIPTS/$1 versions $MIRRORURL | sed -e 's/'$1'=//g'`
+    for ver in $VERSIONS_AVAILABLE; do
+      ANSWER=`$PATH_TO_GE_SCRIPTS/$1 cache ${ver}`
+      [ -n "$ANSWER" ] && echo $1=$ver
+    done
+  else
+    usage "Application '$1' is invalid."
+  fi
+}
+
+
+#
+# show the list of versions already fully downloaded for the all applications
+#
+displayCacheForAll()
+{
+  for app in $GE_VALID_APPS; do
+    displayCacheForApp $app
+  done
+}
+
+
+
 #retrieve a list of valid applications - list saved in "GE_VALID_APPS"
 listValidApps
 

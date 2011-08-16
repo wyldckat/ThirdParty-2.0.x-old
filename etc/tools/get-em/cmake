@@ -40,6 +40,7 @@ Usage
     Must be executed from the ThirdParty folder and OpenFOAM's environment
   must be active. Usage:
      $Script description
+     $Script update MIRROR_URL
      $Script versions MIRROR_URL
      $Script geturl MIRROR_URL VERSION
      $Script getversion MIRROR_URL VERSION
