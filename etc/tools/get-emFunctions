@@ -4,7 +4,7 @@
 #     This file is part of the branch "get-em" available here:
 #         https://github.com/wyldckat/ThirdParty-2.0.x/commits/get-em
 #
-#     These modifications are not endorsed by OpenCFD Ltd.
+#     These modifications have not been endorsed by OpenCFD Ltd nor SGI.
 #
 #     It's licensed under the same license of the target software, namely GPL
 #   v3 or above (see <http://www.gnu.org/licenses/>).
@@ -22,6 +22,7 @@
 
 PATH_TO_GE_SCRIPTS="etc/tools/get-em"
 GE_VALID_APPS=""
+FAILED_DOWNLOADED_APPS=""
 
 
 #
@@ -30,6 +31,29 @@ GE_VALID_APPS=""
 listValidApps()
 {
   GE_VALID_APPS=`ls -1 $PATH_TO_GE_SCRIPTS/* | grep -ve "\." | sed 's=.*/==g'`
+}
+
+
+#
+# save the list of failed downloads
+#
+addFailedDownloadToList()
+{
+  FAILED_DOWNLOADED_APPS="$FAILED_DOWNLOADED_APPS $1"
+}
+
+
+#
+# show the list of applications that failed the download step
+#
+displayFailedDownloads()
+{
+  if [ -n "$FAILED_DOWNLOADED_APPS" ]; then
+    echo "List of failed downloads:"
+    for app in $FAILED_DOWNLOADED_APPS; do
+      echo $app
+    done
+  fi
 }
 
 
@@ -50,7 +74,7 @@ displayValidApps()
 isValidApp()
 {
   for app in $GE_VALID_APPS; do
-    if [ "app" = "$1" ]; then
+    if [ "$app" = "$1" ]; then
       echo "VALID"
       break
     fi
@@ -98,7 +122,7 @@ updateVersions()
 #
 displayVersionsForApp()
 {
-  if [ -n `isValidApp $1` ]; then
+  if [ -n "`isValidApp $1`" ]; then
     $PATH_TO_GE_SCRIPTS/$1 versions `getMirrorForApp $1`
   else
     usage "Application '$1' is invalid."
@@ -122,13 +146,15 @@ displayVersionsForAll()
 #
 displayCacheForApp()
 {
-  if [ -n `isValidApp $1` ]; then
+  if [ -n "`isValidApp $1`" ]; then
+    echo "Versions already downloaded for application '$1'..."
     MIRRORURL=`getMirrorForApp $1`
     VERSIONS_AVAILABLE=`$PATH_TO_GE_SCRIPTS/$1 versions $MIRRORURL | sed -e 's/'$1'=//g'`
     for ver in $VERSIONS_AVAILABLE; do
       ANSWER=`$PATH_TO_GE_SCRIPTS/$1 cache ${ver}`
       [ -n "$ANSWER" ] && echo $1=$ver
     done
+    echo #empty line
   else
     usage "Application '$1' is invalid."
   fi
@@ -146,6 +172,95 @@ displayCacheForAll()
 }
 
 
+#
+# download the app $1 and respective version $2
+#
+downloadApp()
+{
+  if [ -n "`isValidApp $1`" ]; then
+    MIRRORURL=`getMirrorForApp $1`
+    REALVERSION=`$PATH_TO_GE_SCRIPTS/$1 getversion $MIRRORURL $2`
+    FILEURL=`$PATH_TO_GE_SCRIPTS/$1 geturl $MIRRORURL $REALVERSION`
+    FILENAME=`$PATH_TO_GE_SCRIPTS/$1 getfilename $REALVERSION`
+    ISCACHED=`$PATH_TO_GE_SCRIPTS/$1 cache $REALVERSION`
+
+    #purge the bad download
+    [ -n "$ISCACHED" ] && [ "$ISCACHED" = "INCOMPLETE" ] && \
+      $PATH_TO_GE_SCRIPTS/$1 purge $REALVERSION && ISCACHED=""
+
+    if [ -z "$ISCACHED" ]; then
+      downloadFile $FILENAME $FILEURL
+      echo "Downloading $1, version $REALVERSION..."
+
+      echo "Verifying if the downloaded package $1, version $REALVERSION, is OK or not..."
+      FILENAMECHECK=`$PATH_TO_GE_SCRIPTS/$1 verifyfile $REALVERSION`
+
+      if [ -n "$FILENAMECHECK" ]; then
+        echo "The downloaded package $1, version $REALVERSION, seems to be OK."
+      else
+        echo "The downloaded package $1, version $REALVERSION, is NOT OK."
+        addFailedDownloadToList $1=$REALVERSION
+      fi
+    else
+      echo "Application $1, version $REALVERSION, has already been downloaded."
+    fi
+  else
+    usage "Application '$1' is invalid."
+  fi
+}
+
+
+#
+# download the list of apps and respective versions (app=version)
+#
+downloadApps()
+{
+  for appver in $*; do
+    app=${appver%=*}
+    ver=${appver##*=}
+    downloadApp $app $ver
+  done
+}
+
+
+#
+# unpack the app $1 and respective version $2
+#
+unpackApp()
+{
+  if [ -n "`isValidApp $1`" ]; then
+    MIRRORURL=`getMirrorForApp $1`
+    REALVERSION=`$PATH_TO_GE_SCRIPTS/$1 getversion $MIRRORURL $2`
+    ISCACHED=`$PATH_TO_GE_SCRIPTS/$1 cache $REALVERSION`
+    FILENAME=`$PATH_TO_GE_SCRIPTS/$1 getfilename $REALVERSION`
+
+    #check if the package is already in cache
+    [ -n "$ISCACHED" ] && \
+    if [ "$ISCACHED" = "YES" ]; then
+      echo "Unpacking $1, version $REALVERSION..."
+      unpackFile $FILENAME
+    fi
+
+  else
+    usage "Application '$1' is invalid."
+  fi
+}
+
+
+#
+# unpack the list of apps and respective versions (app=version)
+#
+unpackApps()
+{
+  for appver in $*; do
+    app=${appver%=*}
+    ver=${appver##*=}
+    unpackApp $app $ver
+  done
+}
+
+
+# ----------------------------------------------------------------- end of functions
 
 #retrieve a list of valid applications - list saved in "GE_VALID_APPS"
 listValidApps

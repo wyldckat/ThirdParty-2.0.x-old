@@ -5,7 +5,7 @@
 #     This file is part of the branch "get-em" available here:
 #         https://github.com/wyldckat/ThirdParty-2.0.x/commits/get-em
 #
-#     These modifications are not endorsed by OpenCFD Ltd.
+#     These modifications have not been endorsed by OpenCFD Ltd nor SGI.
 #
 #     It's licensed under the same license of the target software, namely GPL
 #   v3 or above (see <http://www.gnu.org/licenses/>).
@@ -27,6 +27,7 @@
 #   * Ability to choose/change mirrors, when available.
 #   * When available, check the md5/sig checksum on the downloaded packages.
 #   * Ability to pick package format: gz, bz2
+#   * Ability to also remove the unpack folder and purge the whole version.
 #
 #------------------------------------------------------------------------------
 
@@ -75,7 +76,7 @@ Valid options (use only one per command)
   update   : updates the cached lists of available versions.
   versions : shows the list of available versions.
   cache    : shows the list of already downloaded packages.
-  install  : download (if necessary) and unpack the desired applications and respective versions.
+  source   : download (if necessary) and unpack the desired applications and respective versions.
   download : download (if necessary) the desired applications and respective versions.
   unpack   : unpack (if available) the desired applications and respective versions.
 
@@ -123,7 +124,7 @@ ve | versions)
 ca | cache)
     cacheOpt=1
     ;;
-in | install)
+so | source)
     downloadOpt=1
     unpackOpt=1
     ;;
@@ -175,11 +176,19 @@ elif [ $cacheOpt -eq 1 ]; then
 
 elif [ $downloadOpt -eq 1 -o $unpackOpt -eq 1 ]; then
 
+  [ "$#" -lt 2 ] && usage "Insufficient arguments..."
+
+  shift #a must in this case
+
   if [ $downloadOpt -eq 1 ]; then
-  :
+    downloadApps $*
+    displayFailedDownloads
   fi
 
   if [ $unpackOpt -eq 1 ]; then
-  :
+    unpackApps $*
   fi
 fi
+
+echo #empty line
+echo $Script tasks completed.

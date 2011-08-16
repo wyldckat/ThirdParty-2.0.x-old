@@ -5,7 +5,7 @@
 #     This file is part of the branch "get-em" available here:
 #         https://github.com/wyldckat/ThirdParty-2.0.x/commits/get-em
 #
-#     These modifications are not endorsed by OpenCFD Ltd.
+#     These modifications have not been endorsed by OpenCFD Ltd nor SGI.
 #
 #     It's licensed under the same license of the target software, namely GPL
 #   v3 or above (see <http://www.gnu.org/licenses/>).
@@ -46,6 +46,7 @@ Usage
      $Script getversion MIRROR_URL VERSION
      $Script getfilename VERSION
      $Script cache VERSION
+     $Script purge VERSION
 
 Valid options (use only one per command)
   description - show the description for this application.
@@ -56,6 +57,7 @@ Valid options (use only one per command)
   getfilename VERSION - get the filename for the desired version (true version only).
   verifyfile VERSION - verify if the package's integrity for the desired version (true version only).
   cache VERSION - check if the version is already downloaded. Shows YES if available.
+  purge VERSION - removes the downloaded package for the selected version.
 
 USAGE
     exit 1
@@ -123,21 +125,36 @@ getversion)
   break
   ;;
 getfilename)
-  [ "$#" -le 1 ] && usage "Missing VERSION for version listing."
+  [ "$#" -le 1 ] && usage "Missing VERSION for filename retrieval."
   echo cmake-$2.tar.gz
   break
   ;;
 verifyfile)
-  [ "$#" -le 1 ] && usage "Missing VERSION for version listing."
+  [ "$#" -le 1 ] && usage "Missing VERSION for file verification."
   FILENAME=`$0 getfilename $2`
   [ -r download/$FILENAME.complete ] && rm download/$FILENAME.complete
-  tar -tzf download/$FILENAME > /dev/null 2>&1 && touch download/$FILENAME.complete && echo "OK"
+  [ -r download/$FILENAME.incomplete ] && rm download/$FILENAME.incomplete
+  if tar -tzf download/$FILENAME > /dev/null 2>&1 ; then
+    touch download/$FILENAME.complete
+    echo "OK"
+  else
+    touch download/$FILENAME.incomplete
+  fi
   break
   ;;
 cache)
-  [ "$#" -le 1 ] && usage "Missing VERSION for version listing."
+  [ "$#" -le 1 ] && usage "Missing VERSION for cache check."
   FILENAME=`$0 getfilename $2`
   [ -r download/$FILENAME.complete ] && echo "YES"
+  [ -r download/$FILENAME.incomplete ] && echo "INCOMPLETE"
+  break
+  ;;
+purge)
+  [ "$#" -le 1 ] && usage "Missing VERSION for purging."
+  FILENAME=`$0 getfilename $2`
+  [ -r download/$FILENAME ] && rm download/$FILENAME
+  [ -r download/$FILENAME.complete ] && rm download/$FILENAME.complete
+  [ -r download/$FILENAME.incomplete ] && rm download/$FILENAME.incomplete
   break
   ;;
 *)
