@@ -61,7 +61,7 @@ GE_update()
 #
 GE_geturl()
 {
-  grep -e "_${2}\." ${versionCacheFile}_urls
+  grep -e "-${2}\." ${versionCacheFile}_urls
 }
 
 

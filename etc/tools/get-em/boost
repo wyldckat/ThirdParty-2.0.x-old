@@ -25,11 +25,15 @@
 #
 #------------------------------------------------------------------------------
 
-versionVar="boost_version"
+versionVar="boost_version_mod"
 appName="boost"
 appDefaultSep="_"
 appFileExt="tar.gz"
 
+boost_version_mod=`. etc/defaults.sh ; \
+                   echo $boost_version | \
+                   sed 's/'${appName}${appDefaultSep}'//' | \
+                   sed -e 's=_=\.=g'`
 
 #
 # Change $1 xx.xx.xx to xx_xx_xx
@@ -79,8 +83,9 @@ GE_update()
 #
 GE_geturl()
 {
+  VERSION_dots=`changeVersionToDots $2`
   VERSION__=`changeVersionToUnderScores $2`
-  echo ${1}$2/boost_${VERSION__}.$appFileExt/download
+  echo ${1}${VERSION_dots}/boost_${VERSION__}.$appFileExt/download
 }
 
 
@@ -89,7 +94,8 @@ GE_geturl()
 #
 GE_getfolder()
 {
-  echo boost-$1
+  VERSION__=`changeVersionToUnderScores $1`
+  echo boost-$VERSION__
 }
 
 

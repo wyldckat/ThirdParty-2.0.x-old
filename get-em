@@ -24,9 +24,10 @@
 #   this script is an over-simplified version of any package manager.
 #
 # TODO
-#   * Ability to choose/change mirrors, when available.
+#   * Ability to choose/change mirrors, when more than one site is available.
 #   * When available, check the md5/sig checksum on the downloaded packages.
 #   * Ability to pick package format: tar.gz, tar.bz2, zip
+#   * Option for dry-run, which will only generate a list of files to download.
 #
 #------------------------------------------------------------------------------
 
@@ -90,9 +91,9 @@ Special application markers and versions
 
 Examples
   Download only gcc 4.5.2:
-      ./$Script source gcc=4.5.2
+      ./$Script do gcc=4.5.2
 
-  Download only gcc latest:
+  Download and unpack the latest gcc:
       ./$Script source gcc=latest
 
 USAGE

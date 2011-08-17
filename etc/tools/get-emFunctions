@@ -73,6 +73,18 @@ theQuestion()
 
 
 #
+# show the list of applications that have been selected $*
+#
+showSelectionList()
+{
+  for appver in $*; do
+    echo "   $appver"
+  done
+  echo
+}
+
+
+#
 # show the list of applications that failed the download step
 #
 displayFailedDownloads()
@@ -312,7 +324,7 @@ removeApp()
 removeApps()
 {
   echo "Are you certain that you wish to remove the source folders for the following applications:"
-  echo $*
+  showSelectionList $*
   theQuestion
   if [ $THE_ANSWER -eq 1 ]; then
     for appver in $*; do
@@ -354,7 +366,7 @@ purgeApp()
 purgeApps()
 {
   echo "Are you certain that you wish to remove from cache the following applications:"
-  echo $*
+  showSelectionList $*
   theQuestion
   if [ $THE_ANSWER -eq 1 ]; then
     for appver in $*; do
