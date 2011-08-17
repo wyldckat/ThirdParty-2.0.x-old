@@ -27,18 +27,34 @@
 
 versionVar="boost_version"
 appName="boost"
-appDefaultSep="-"
+appDefaultSep="_"
 appFileExt="tar.gz"
 
 
-       ....NOT WORKING....
+#
+# Change $1 xx.xx.xx to xx_xx_xx
+#
+changeVersionToUnderScores()
+{
+  echo $1 | sed -e 's=\.=_=g'
+}
+
+
+#
+# Change $1 xx_xx_xx to xx.xx.xx
+#
+changeVersionToDots()
+{
+  echo $1 | sed -e 's=_=\.=g'
+}
+
 
 #
 # Shows the description for this application.
 #
 GE_showDesc()
 {
-  echo "mpc - Retrieve the MPC package. Size: 400 to 600kB"
+  echo "boost - Retrieve the Boost C++ package. Size: 40 to 60MB"
 }
 
 
@@ -48,9 +64,10 @@ GE_showDesc()
 #
 GE_update()
 {
-  wget "${1}index.php?prog=mpc&page=download" -O $testFile > /dev/null 2>&1
-  grep -e 'mpc-[0-9.]*\.tar\.gz"' $testFile | \
-    sed -e 's=.*/\(mpc-[0-9.]*\)\..*=\1=' -e 's_-_=_' | \
+  wget "${1}" -O $testFile > /dev/null 2>&1
+  grep -e 'href.*/[0-9.]*/"' $testFile | \
+    sed -e 's=.*\(/[0-9.]*\)/.*=\1=' -e 's_/_boost=_' | \
+    grep -v -e "=1\.[0-3][0-9]*" | \
     sort -u > $versionCacheFile
   rm $testFile
 }
@@ -62,7 +79,8 @@ GE_update()
 #
 GE_geturl()
 {
-  echo ${1}mpc/download/mpc-$2.$appFileExt
+  VERSION__=`changeVersionToUnderScores $2`
+  echo ${1}$2/boost_${VERSION__}.$appFileExt/download
 }
 
 
@@ -71,7 +89,7 @@ GE_geturl()
 #
 GE_getfolder()
 {
-  echo mpc-$1
+  echo boost-$1
 }
 
 
