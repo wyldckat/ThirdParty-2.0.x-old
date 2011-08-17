@@ -26,8 +26,7 @@
 # TODO
 #   * Ability to choose/change mirrors, when available.
 #   * When available, check the md5/sig checksum on the downloaded packages.
-#   * Ability to pick package format: gz, bz2
-#   * Ability to also remove the unpack folder and purge the whole version.
+#   * Ability to pick package format: tar.gz, tar.bz2, zip
 #
 #------------------------------------------------------------------------------
 
@@ -70,6 +69,8 @@ Usage
      ./$Script so(urce) APPLICATION1=VERSION [APPLICATION2=VERSION] [...]
      ./$Script do(wnload) APPLICATION1=VERSION [APPLICATION2=VERSION] [...]
      ./$Script un(pack) APPLICATION1=VERSION [APPLICATION2=VERSION] [...]
+     ./$Script re(move) APPLICATION1=VERSION [APPLICATION2=VERSION] [...]
+     ./$Script pu(rge) APPLICATION1=VERSION [APPLICATION2=VERSION] [...]
 
 Valid options (use only one per command)
   list     : shows a list of the retrievable software applications.
@@ -79,6 +80,8 @@ Valid options (use only one per command)
   source   : download (if necessary) and unpack the desired applications and respective versions.
   download : download (if necessary) the desired applications and respective versions.
   unpack   : unpack (if available) the desired applications and respective versions.
+  remove   : remove the unpacked folders the desired applications and respective versions.
+  purge    : remove from the cache the downloaded packages for the desired applications and respective versions.
 
 Special application markers and versions
   buildtools=default : download and unpack the default applications necessary for the currently selected WM_ARCH+WM_COMPILER build rule.
@@ -106,6 +109,8 @@ updateOpt=0
 cacheOpt=0
 downloadOpt=0
 unpackOpt=0
+removeOpt=0
+purgeOpt=0
 
 # parse primary option
 case "$1" in
@@ -133,6 +138,12 @@ do | download)
     ;;
 un | unpack)
     unpackOpt=1
+    ;;
+re | remove)
+    removeOpt=1
+    ;;
+pu | purge)
+    purgeOpt=1
     ;;
 *)
     usage "unknown option/argument: '$1'"
@@ -188,6 +199,17 @@ elif [ $downloadOpt -eq 1 -o $unpackOpt -eq 1 ]; then
   if [ $unpackOpt -eq 1 ]; then
     unpackApps $*
   fi
+
+elif [ $removeOpt -eq 1 ]; then
+
+  shift #a must in this case
+  removeApps $*
+
+elif [ $purgeOpt -eq 1 ]; then
+
+  shift #a must in this case
+  purgeApps $*
+
 fi
 
 echo #empty line

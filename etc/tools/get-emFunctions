@@ -44,6 +44,35 @@ addFailedDownloadToList()
 
 
 #
+# The answer to the million dollar question: are you sure?
+# Returns the variable "THE_ANSWER" with 1 (Yes) or 0 (No).
+#
+theQuestion()
+{
+  THE_ANSWER=""
+  while [ -z "$THE_ANSWER" ]; do
+    echo "(Y)es or (N)o?"
+    read THE_ANSWER
+    case $THE_ANSWER in
+    Y | Yes | y | yes)
+      THE_ANSWER=1
+      break
+      ;;
+    N | No | n | no)
+      THE_ANSWER=0
+      break
+      ;;
+    *)
+      echo Invalid answer...
+      THE_ANSWER=""
+      break
+      ;;
+    esac
+  done
+}
+
+
+#
 # show the list of applications that failed the download step
 #
 displayFailedDownloads()
@@ -232,15 +261,15 @@ unpackApp()
     MIRRORURL=`getMirrorForApp $1`
     REALVERSION=`$PATH_TO_GE_SCRIPTS/$1 getversion $MIRRORURL $2`
     ISCACHED=`$PATH_TO_GE_SCRIPTS/$1 cache $REALVERSION`
-    FILENAME=`$PATH_TO_GE_SCRIPTS/$1 getfilename $REALVERSION`
 
     #check if the package is already in cache
     [ -n "$ISCACHED" ] && \
     if [ "$ISCACHED" = "YES" ]; then
       echo "Unpacking $1, version $REALVERSION..."
       $PATH_TO_GE_SCRIPTS/$1 unpack $REALVERSION
+    else
+      echo "The package for $1, version $REALVERSION has not been downloaded yet."
     fi
-
   else
     usage "Application '$1' is invalid."
   fi
@@ -257,6 +286,83 @@ unpackApps()
     ver=${appver##*=}
     unpackApp $app $ver
   done
+}
+
+
+#
+# remove the folder for the app $1 and respective version $2
+#
+removeApp()
+{
+  if [ -n "`isValidApp $1`" ]; then
+    MIRRORURL=`getMirrorForApp $1`
+    REALVERSION=`$PATH_TO_GE_SCRIPTS/$1 getversion $MIRRORURL $2`
+
+    echo "Removing the folder for $1, version $REALVERSION..."
+    $PATH_TO_GE_SCRIPTS/$1 remove $REALVERSION
+  else
+    usage "Application '$1' is invalid."
+  fi
+}
+
+
+#
+# remove the folders for the list of apps and respective versions (app=version)
+#
+removeApps()
+{
+  echo "Are you certain that you wish to remove the source folders for the following applications:"
+  echo $*
+  theQuestion
+  if [ $THE_ANSWER -eq 1 ]; then
+    for appver in $*; do
+      app=${appver%=*}
+      ver=${appver##*=}
+      removeApp $app $ver
+    done
+  fi
+}
+
+
+#
+# purge the downloaded package for the app $1 and respective version $2
+#
+purgeApp()
+{
+  if [ -n "`isValidApp $1`" ]; then
+    MIRRORURL=`getMirrorForApp $1`
+    REALVERSION=`$PATH_TO_GE_SCRIPTS/$1 getversion $MIRRORURL $2`
+    ISCACHED=`$PATH_TO_GE_SCRIPTS/$1 cache $REALVERSION`
+
+    #check if the package is already in cache
+    [ -n "$ISCACHED" ] && \
+    if [ "$ISCACHED" = "YES" ]; then
+      echo "Purging $1, version $REALVERSION..."
+      $PATH_TO_GE_SCRIPTS/$1 purge $REALVERSION
+    else
+      echo "The package for $1, version $REALVERSION has already been purged."
+    fi
+  else
+    usage "Application '$1' is invalid."
+  fi
+}
+
+
+#
+# purge the downloaded package for the list of apps and respective versions (app=version)
+#
+purgeApps()
+{
+  echo "Are you certain that you wish to remove from cache the following applications:"
+  echo $*
+  theQuestion
+  if [ $THE_ANSWER -eq 1 ]; then
+    for appver in $*; do
+      app=${appver%=*}
+      ver=${appver##*=}
+      purgeApp $app $ver
+    done
+  fi
 }
 
 

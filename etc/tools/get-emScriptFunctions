@@ -73,6 +73,7 @@ Usage
      $Script getfilename VERSION
      $Script cache VERSION
      $Script purge VERSION
+     $Script remove VERSION
      $Script unpack VERSION
 
 Valid options (use only one per command)
@@ -85,6 +86,7 @@ Valid options (use only one per command)
   verifyfile VERSION - verify if the package's integrity for the desired version (true version only).
   cache VERSION - check if the version is already downloaded. Shows YES if available.
   purge VERSION - removes the downloaded package for the selected version.
+  remove VERSION - removes the application source folder for the selected version.
   unpack VERSION - unpacks the downloaded package for the selected version.
 
 USAGE
@@ -154,7 +156,7 @@ GETEM_getversion()
   [ "$#" -lt 2 ] && GETEM_usage "Missing MIRROR_URL and/or VERSION for true version retrieval."
   case $2 in
   default)
-    VERSION=`. etc/defaults.sh ; echo \$$versionVar | sed 's/'${appName}${appDefaultSep}'//'`
+    VERSION=`. etc/defaults.sh ; eval echo "\$"$versionVar | sed 's/'${appName}${appDefaultSep}'//'`
     break
     ;;
   latest)
@@ -251,22 +253,54 @@ GETEM_purge()
 #
 GETEM_unpackFile()
 {
+  [ "$#" -lt 1 ] && GETEM_usage "Missing VERSION for unpacking."
   FILENAME=`GETEM_getfilename $1`
   FOLDER=`GE_getfolder $1`
   LEVELS2KILL=`GE_levels $1`
+  DO_UNPACK_IT=1;
 
-  echo "Extracting $appName, version $1 ..."
+  if [ -d $FOLDER ]; then
+    THE_ANSWER=""
+    while [ -z "$THE_ANSWER" ]; do
+      echo "The folder $FOLDER already exists. (R)emove the folder, (O)verwrite or (S)kip?"
+      read THE_ANSWER
+      case $THE_ANSWER in
+      R | r)
+        GETEM_removeFolder $1
+        break
+        ;;
+      O | o)
+        #do nothing... simply go ahead and do it!
+        break
+        ;;
+      S | s)
+        DO_UNPACK_IT=0;
+        echo Skipping file...
+        break
+        ;;
+      *)
+        echo Invalid answer...
+        THE_ANSWER=""
+        break
+        ;;
+      esac
+    done
+    unset THE_ANSWER
+  fi
+
   if [ ! -f "download/$FILENAME" ]; then
     echo "Could not unpack $FILENAME"
     exit 1
-  else
+  elif [ $DO_UNPACK_IT -eq 1 ]; then
     case $appFileExt in
     tar.gz)
-      tar -xzf download/$FILENAME -C "$FOLDER" --strip-components=$LEVELS2KILL
+      mkdir -p "$FOLDER" && \
+        tar -xzf download/$FILENAME -C "$FOLDER" --strip-components=$LEVELS2KILL
       break
       ;;
     tar.bz2)
-      tar -xjf download/$FILENAME -C "$FOLDER" --strip-components=$LEVELS2KILL
+      mkdir -p "$FOLDER" && \
+        tar -xjf download/$FILENAME -C "$FOLDER" --strip-components=$LEVELS2KILL
       break
       ;;
     zip)
@@ -290,6 +324,15 @@ GETEM_unpackFile()
 }
 
 
+#
+# Remove the folder for the version $1, using the designation defined by GE_getfolder
+#
+GETEM_removeFolder()
+{
+  [ "$#" -lt 1 ] && GETEM_usage "Missing VERSION for removing folder."
+  FOLDER=`GE_getfolder $1`
+  [ -n "$FOLDER" -a -d "$FOLDER" ] && rm -rf "$FOLDER"
+}
 
 # ------------------------------------------------------------ end of functions
 
@@ -334,6 +377,10 @@ purge)
   ;;
 unpack)
   GETEM_unpackFile $2
+  break
+  ;;
+remove)
+  GETEM_removeFolder $2
   break
   ;;
 *)
