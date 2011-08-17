@@ -1,0 +1,345 @@
+#---------------------------------*- sh -*-------------------------------------
+# License
+#
+#     This file is part of the branch "get-em" available here:
+#         https://github.com/wyldckat/ThirdParty-2.0.x/commits/get-em
+#
+#     These modifications have not been endorsed by OpenCFD Ltd nor SGI.
+#
+#     It's licensed under the same license of the target software, namely GPL
+#   v3 or above (see <http://www.gnu.org/licenses/>).
+#
+#     The target software is OpenFOAM(R) <http://www.openfoam.com>, which is
+#   trademarked by and Copyright (C) OpenCFD Ltd.
+#
+# File
+#     etc/tools/get-emScriptFunctions
+#
+# Description
+#     Functions for the scripts called from get-em and made available at
+#   "etc/tools/get-em/".
+#
+# Requirements
+#     Assumes that the current work folder is the base ThirdParty folder.
+#
+#   Predefined variables
+#     versionVar    - should have the name of the default variable
+#                     name defined in "etc/default.sh".
+#     appName       - should have the short name of the application,
+#                     which usually is the script's name.
+#     appDefaultSep - should have the character that is used as a separator
+#                     between the application short name and the version number.
+#                     If none is required, then set it as "".
+#     appFileExt    - should have the whole extension (without the first dot)
+#                     for the file to be downloaded. The usual is "tar.gz".
+#
+#   Predefined functions
+#     GE_showDesc   - shows the description for the calling script.
+#     GE_update     - Does the real update protocol for filling the file defined
+#                     by $versionCacheFile .
+#     GE_geturl     - Should echo the complete url for the file to be
+#                     downloaded.
+#     GE_getfolder  - Should echo the relative path of the target folder. Usually
+#                     should simply be the name for such folder.
+#     GE_levels     - Should echo the number of folder levels counting from the
+#                     left, should the unpacker drop. This is a prevention
+#                     mechanism for tar/zipbombs.
+#
+#------------------------------------------------------------------------------
+
+#These will register pertinent information for the calling script
+Script=${0##*/}
+path2Script=${0%/*}
+versionCacheFile=$path2Script/$Script.cache
+testFile="$Script.dumpfile.$$"
+
+
+#
+# Showing the list of options available for each script
+#
+GETEM_usage() {
+    exec 1>&2
+    while [ "$#" -ge 1 ]; do echo "$1"; shift; done
+    cat<<USAGE
+
+Usage
+    Must be executed from the ThirdParty folder and OpenFOAM's environment
+  must be active. Usage:
+     $Script description
+     $Script update MIRROR_URL
+     $Script versions MIRROR_URL
+     $Script geturl MIRROR_URL VERSION
+     $Script getversion MIRROR_URL VERSION
+     $Script getfilename VERSION
+     $Script cache VERSION
+     $Script purge VERSION
+     $Script unpack VERSION
+
+Valid options (use only one per command)
+  description - show the description for this application.
+  update MIRROR_URL - updates the list of versions available.
+  versions MIRROR_URL - show the list of versions available for this application.
+  geturl MIRROR_URL VERSION - get the link for the desired version to download.
+  getversion MIRROR_URL VERSION - get the true version.
+  getfilename VERSION - get the filename for the desired version (true version only).
+  verifyfile VERSION - verify if the package's integrity for the desired version (true version only).
+  cache VERSION - check if the version is already downloaded. Shows YES if available.
+  purge VERSION - removes the downloaded package for the selected version.
+  unpack VERSION - unpacks the downloaded package for the selected version.
+
+USAGE
+    exit 1
+}
+
+#automatic validation, before sourcing the remaining functions
+[ "$#" -eq 0 ] && GETEM_usage "Missing any options."
+
+
+# ---------------------------------------------------------- start of functions
+
+#
+# Call GE_showDesc for the real description, predefined in the calling
+# script
+#
+GETEM_showDescription()
+{
+  GE_showDesc
+}
+
+
+#
+# Calls the function GE_update do the real update protocol, sending it the
+# mirror url $1 and version $2
+#
+GETEM_update()
+{
+  [ "$#" -lt 1 ] && GETEM_usage "Missing MIRROR_URL for version listing."
+  GE_update $1 $2
+}
+
+
+#
+# Shows the list of available versions for the given mirror url $1 and version $2.
+# The mirror url is necessary for automatic retrieval of the list of versions.
+#
+GETEM_versions()
+{
+  [ "$#" -lt 1 ] && GETEM_usage "Missing MIRROR_URL for version listing."
+  [ ! -r "$versionCacheFile" ] && GETEM_update $1 $2 #force an update
+  [ ! -r "$versionCacheFile" ] && GETEM_usage "Unable to update the list of versions"
+  cat $versionCacheFile
+}
+
+
+#
+# Gets the full url for downloading the file.
+# Receives the mirror url $1 and the literal version $2, then calls the GE_geturl function
+# that has been defined in the caller script with the same mirror url and but with the real version.
+#
+GETEM_geturl()
+{
+  [ "$#" -lt 2 ] && GETEM_usage "Missing MIRROR_URL and/or VERSION for url retrieval."
+  VERSION=`GETEM_getversion $1 $2`
+  GE_geturl $1 $VERSION
+}
+
+
+#
+# Gets the real version definition, by translating the literal one.
+# Receives the mirror url $1 and the literal version $2. Needs the predefined variables "versionVar",
+# "appName" and "appDefaultSep" to be properly defined prior to sourcing this script.
+#
+GETEM_getversion()
+{
+  [ "$#" -lt 2 ] && GETEM_usage "Missing MIRROR_URL and/or VERSION for true version retrieval."
+  case $2 in
+  default)
+    VERSION=`. etc/defaults.sh ; echo \$$versionVar | sed 's/'${appName}${appDefaultSep}'//'`
+    break
+    ;;
+  latest)
+    VERSION=`GETEM_versions $1 | tail -n 1 | sed -e 's/'$appName'=//'`
+    break
+    ;;
+  *)
+    VERSION=$2
+    break
+    ;;
+  esac
+  echo $VERSION
+}
+
+
+#
+# Receives the real version $1 and returns the package name. Needs "appName" and "appFileExt"
+# to be defined prior to sourcing this script.
+#
+GETEM_getfilename()
+{
+  [ "$#" -lt 1 ] && GETEM_usage "Missing VERSION for filename retrieval."
+  echo $appName-$1.$appFileExt
+}
+
+
+#
+# Verifies if the file is valid. The validation is made using the unpacking
+# applications to test themselves the downloaded files.
+#
+GETEM_verifyfile()
+{
+  [ "$#" -lt 1 ] && GETEM_usage "Missing VERSION for file verification."
+  FILENAME=`GETEM_getfilename $1`
+  [ -r download/$FILENAME.complete ] && rm download/$FILENAME.complete
+  [ -r download/$FILENAME.incomplete ] && rm download/$FILENAME.incomplete
+
+  #process depending on file extension
+  VERIFY_STATUS=0
+  case $appFileExt in
+  tar.gz)
+     tar -tzf download/$FILENAME > /dev/null 2>&1 && VERIFY_STATUS=1
+     break
+     ;;
+  tar.bz2)
+     tar -tjf download/$FILENAME > /dev/null 2>&1 && VERIFY_STATUS=1
+     break
+     ;;
+  zip)
+     unzip -t download/$FILENAME > /dev/null 2>&1 && VERIFY_STATUS=1
+     break
+     ;;
+  *)
+    GETEM_usage "File extension '$appFileExt' is not recognized for validation."
+    ;;
+  esac
+
+  if [ $VERIFY_STATUS -eq 1 ]; then
+    touch download/$FILENAME.complete
+    echo "OK"
+  else
+    touch download/$FILENAME.incomplete
+  fi
+}
+
+
+#
+# Checks if the package file for the version $1 is available in the cache.
+#
+GETEM_cache()
+{
+  [ "$#" -lt 1 ] && GETEM_usage "Missing VERSION for cache check."
+  FILENAME=`GETEM_getfilename $1`
+  [ -r download/$FILENAME.complete ] && echo "YES"
+  [ -r download/$FILENAME.incomplete ] && echo "INCOMPLETE"
+}
+
+
+#
+# Removes the package file for the version $1 from the cache.
+#
+GETEM_purge()
+{
+  [ "$#" -lt 1 ] && GETEM_usage "Missing VERSION for purging."
+  FILENAME=`GETEM_getfilename $1`
+  [ -r download/$FILENAME ] && rm download/$FILENAME
+  [ -r download/$FILENAME.complete ] && rm download/$FILENAME.complete
+  [ -r download/$FILENAME.incomplete ] && rm download/$FILENAME.incomplete
+}
+
+
+#
+# Unpack the file version $1, using the designation defined by GE_getfolder
+#
+GETEM_unpackFile()
+{
+  FILENAME=`GETEM_getfilename $1`
+  FOLDER=`GE_getfolder $1`
+  LEVELS2KILL=`GE_levels $1`
+
+  echo "Extracting $appName, version $1 ..."
+  if [ ! -f "download/$FILENAME" ]; then
+    echo "Could not unpack $FILENAME"
+    exit 1
+  else
+    case $appFileExt in
+    tar.gz)
+      tar -xzf download/$FILENAME -C "$FOLDER" --strip-components=$LEVELS2KILL
+      break
+      ;;
+    tar.bz2)
+      tar -xjf download/$FILENAME -C "$FOLDER" --strip-components=$LEVELS2KILL
+      break
+      ;;
+    zip)
+      LEVEL2KILL_STR="*"
+      for level in $(seq 1 $LEVEL2KILL); do
+        LEVEL2KILL_STR="${LEVEL2KILL_STR}/*"
+      done
+
+      mkdir "$testFile" && \
+        unzip "download/$FILENAME" -d "$testFile" && \
+        mkdir -p $FOLDER > /dev/null 2>&1  && \
+        mv "$testFile"/$LEVEL2KILL_STR "$FOLDER/"
+      [ -n "$testFile" -a -d "$testFile" ] && rm -rf "$testFile"
+      break
+      ;;
+    *)
+      GETEM_usage "File extension '$appFileExt' is not recognized for unpacking."
+      ;;
+    esac
+  fi
+}
+
+
+
+# ------------------------------------------------------------ end of functions
+
+
+# automatic body of the calling script ----------------------------------------
+case $1 in
+description)
+  GETEM_showDescription
+  break
+  ;;
+update)
+  GETEM_update $2 $3
+  break
+  ;;
+versions)
+  GETEM_versions $2 $3
+  break
+  ;;
+geturl)
+  GETEM_geturl $2 $3
+  break
+  ;;
+getversion)
+  GETEM_getversion $2 $3
+  break
+  ;;
+getfilename)
+  GETEM_getfilename $2
+  break
+  ;;
+verifyfile)
+  GETEM_verifyfile $2 $3
+  break
+  ;;
+cache)
+  GETEM_cache $2
+  break
+  ;;
+purge)
+  GETEM_purge $2
+  break
+  ;;
+unpack)
+  GETEM_unpackFile $2
+  break
+  ;;
+*)
+  usage "Invalid option '$1'"
+  ;;
+esac
+
+
+# ----------------------------------------------------------------- end-of-file

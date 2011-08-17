@@ -238,7 +238,7 @@ unpackApp()
     [ -n "$ISCACHED" ] && \
     if [ "$ISCACHED" = "YES" ]; then
       echo "Unpacking $1, version $REALVERSION..."
-      unpackFile $FILENAME
+      $PATH_TO_GE_SCRIPTS/$1 unpack $REALVERSION
     fi
 
   else

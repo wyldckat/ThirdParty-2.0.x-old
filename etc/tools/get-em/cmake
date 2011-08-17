@@ -25,139 +25,85 @@
 #
 #------------------------------------------------------------------------------
 
-#these two might come in handy
-Script=${0##*/}
-path2Script=${0%/*}
-versionCacheFile=$path2Script/$Script.cache
-testFile="$Script.dumpfile.$$"
+versionVar="cmake_version"
+appName="cmake"
+appDefaultSep="" #none needed
+appFileExt="tar.gz"
 
-usage() {
-    exec 1>&2
-    while [ "$#" -ge 1 ]; do echo "$1"; shift; done
-    cat<<USAGE
 
-Usage
-    Must be executed from the ThirdParty folder and OpenFOAM's environment
-  must be active. Usage:
-     $Script description
-     $Script update MIRROR_URL
-     $Script versions MIRROR_URL
-     $Script geturl MIRROR_URL VERSION
-     $Script getversion MIRROR_URL VERSION
-     $Script getfilename VERSION
-     $Script cache VERSION
-     $Script purge VERSION
-
-Valid options (use only one per command)
-  description - show the description for this application.
-  update MIRROR_URL - updates the list of versions available.
-  versions MIRROR_URL - show the list of versions available for this application.
-  geturl MIRROR_URL VERSION - get the link for the desired version to download.
-  getversion MIRROR_URL VERSION - get the true version.
-  getfilename VERSION - get the filename for the desired version (true version only).
-  verifyfile VERSION - verify if the package's integrity for the desired version (true version only).
-  cache VERSION - check if the version is already downloaded. Shows YES if available.
-  purge VERSION - removes the downloaded package for the selected version.
-
-USAGE
-    exit 1
-}
-
+#
+# Shows the major version based on the whole version.
+#
 getMajorVersion()
 {
   echo $1 | sed -e 's=\(^[0-9]\.[0-9]\).*=\1='
 }
 
-[ "$#" -eq 0 ] && usage "Missing any options."
-
-case $1 in
-description)
+#
+# Shows the description for this application.
+#
+GE_showDesc()
+{
   echo "cmake - Retrieve CMake source code. Size: 3 to 6MB"
-  break
-  ;;
-update)
-  [ "$#" -le 1 ] && usage "Missing MIRROR_URL for version listing."
+}
+
+
+#
+# Updates the file defined in $versionCacheFile, using the mirror url $1 and
+# uses the $testFile as a sandbox.
+#
+GE_update()
+{
   #first check available major versions (>=2.6)
-  wget "$2" -O $testFile > /dev/null 2>&1
-  LIST_MAJOR_VERSIONS=`grep -e "v[2-9]\.[0-9]/" $testFile | sed -e 's=.*>\(v.*/\)</a.*=\1=' -e 's=/==' -e 's=v==' | grep -v -e "^2\.[0-5]" | sort -u`
+  wget "$1" -O $testFile > /dev/null 2>&1
+  LIST_MAJOR_VERSIONS=`grep -e "v[2-9]\.[0-9]/" $testFile | \
+    sed -e 's=.*>\(v.*/\)</a.*=\1=' -e 's=/==' -e 's=v==' | \
+    grep -v -e "^2\.[0-5]" | \
+    sort -u`
   [ -r "$versionCacheFile" ] && rm $versionCacheFile
 
   #now cycle through the major versions and list the available minor versions
   for mjv in $LIST_MAJOR_VERSIONS; do
-    wget "$2/v$mjv/" -O $testFile > /dev/null 2>&1
-    grep -e "cmake-[0-9]\.[0-9]\.[0-9]\.tar.gz" $testFile | sed -e 's=.*>\(cmake-.*\)\.tar.gz<.*=\1=' -e 's_-_=_' | sort -u >> $versionCacheFile
+    wget "$1/v$mjv/" -O $testFile > /dev/null 2>&1
+    grep -e "cmake-[0-9]\.[0-9]\.[0-9]\.tar.gz" $testFile | \
+      sed -e 's=.*>\(cmake-.*\)\.tar.gz<.*=\1=' -e 's_-_=_' | \
+      sort -u >> $versionCacheFile
   done
 
   rm $testFile
-  break
-  ;;
-versions)
-  [ "$#" -le 1 ] && usage "Missing MIRROR_URL for version listing."
-  [ ! -r "$versionCacheFile" ] && $0 update $2 $3 #force an update
-  [ ! -r "$versionCacheFile" ] && usage "Unable to update the list of versions"
-  cat $versionCacheFile
-  break
-  ;;
-geturl)
-  [ "$#" -le 2 ] && usage "Missing MIRROR_URL and/or VERSION for url retrieval."
-  VERSION=`$0 getversion $2 $3`
-  MAJORVERSION=`getMajorVersion $3`
-  echo ${2}v$MAJORVERSION/cmake-$VERSION.tar.gz
-  break
-  ;;
-getversion)
-  [ "$#" -le 2 ] && usage "Missing MIRROR_URL and/or VERSION for true version retrieval."
-  case $3 in
-  default)
-    VERSION=`. etc/defaults.sh ; echo \$cmake_version | sed 's/cmake-//'`
-    break
-    ;;
-  latest)
-    VERSION=`$0 versions $2 | tail -n 1 | sed -e 's/cmake=//'`
-    break
-    ;;
-  *)
-    VERSION=$3
-    break
-    ;;
-  esac
-  echo $VERSION
-  break
-  ;;
-getfilename)
-  [ "$#" -le 1 ] && usage "Missing VERSION for filename retrieval."
-  echo cmake-$2.tar.gz
-  break
-  ;;
-verifyfile)
-  [ "$#" -le 1 ] && usage "Missing VERSION for file verification."
-  FILENAME=`$0 getfilename $2`
-  [ -r download/$FILENAME.complete ] && rm download/$FILENAME.complete
-  [ -r download/$FILENAME.incomplete ] && rm download/$FILENAME.incomplete
-  if tar -tzf download/$FILENAME > /dev/null 2>&1 ; then
-    touch download/$FILENAME.complete
-    echo "OK"
-  else
-    touch download/$FILENAME.incomplete
-  fi
-  break
-  ;;
-cache)
-  [ "$#" -le 1 ] && usage "Missing VERSION for cache check."
-  FILENAME=`$0 getfilename $2`
-  [ -r download/$FILENAME.complete ] && echo "YES"
-  [ -r download/$FILENAME.incomplete ] && echo "INCOMPLETE"
-  break
-  ;;
-purge)
-  [ "$#" -le 1 ] && usage "Missing VERSION for purging."
-  FILENAME=`$0 getfilename $2`
-  [ -r download/$FILENAME ] && rm download/$FILENAME
-  [ -r download/$FILENAME.complete ] && rm download/$FILENAME.complete
-  [ -r download/$FILENAME.incomplete ] && rm download/$FILENAME.incomplete
-  break
-  ;;
-*)
-  usage "Invalid option '$1'"
-  ;;
-esac
+}
+
+
+#
+# Receives the mirror url $1, the real version $2 and the variable $appFileExt.
+# Shows the full url for the file to be downloaded.
+#
+GE_geturl()
+{
+  MAJORVERSION=`getMajorVersion $2`
+  echo ${1}v$MAJORVERSION/cmake-$2.$appFileExt
+}
+
+
+#
+# Echoes the relative path of the target folder. Receives the real version $1.
+#
+GE_getfolder()
+{
+  echo cmake-$1
+}
+
+
+#
+# Echoes the number of folder levels counting from the left that the unpacker
+# should drop. This is (or at least it should be) a prevention mechanism for
+# tar/zipbombs.
+#
+GE_levels()
+{
+  echo 1
+}
+
+
+# Finally source the master script
+. etc/tools/get-emScriptFunctions

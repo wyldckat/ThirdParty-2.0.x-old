@@ -75,29 +75,6 @@ downloadFile()
 
 
 #
-# unpackFile filename [target_folder]
-#
-unpackFile()
-{
-  if [ -z "$2" ]; then
-    cd $WM_THIRD_PARTY_DIR
-  else
-    [ ! -d "$2" ] && mkdir -p $2
-    cd $2
-  fi
-
-  echo "Extracting $1"
-  if [ ! -f "$WM_THIRD_PARTY_DIR/download/$1" ]; then
-    echo "Could not unpack $1"
-    exit 1
-  else
-    tar -xf "$WM_THIRD_PARTY_DIR/download/$1"
-    [ -z "$2" ] && cd -
-  fi
-}
-
-
-#
 # copy Make/{files,options} from wmakeFiles/PACKAGE
 #
 # $1 = PACKAGE
