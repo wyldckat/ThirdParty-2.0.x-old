@@ -14,30 +14,21 @@
 #   trademarked by and Copyright (C) OpenCFD Ltd.
 #
 # File
-#     etc/tools/get-em/cmake
+#     etc/tools/get-em/tecio
 #
 # Description
 #     This script will gather the necessary information about the application.
 #     This script expects to be executed in the base folder where the get-em script is.
 #
 # FIXME
-#   * Currently it is hard-coded to use tar.gz.
+#   * Currently it is hard-coded to use zip.
 #
 #------------------------------------------------------------------------------
 
-versionVar="cmake_version"
-appName="cmake"
+versionVar="tecio_version"
+appName="tecio"
 appDefaultSep="" #none needed
-appFileExt="tar.gz"
-
-
-#
-# Shows the major version based on the whole version.
-#
-getMajorVersion()
-{
-  echo $1 | sed -e 's=\(^[0-9]\.[0-9]\).*=\1='
-}
+appFileExt="zip"
 
 
 #
@@ -45,7 +36,7 @@ getMajorVersion()
 #
 GE_showDesc()
 {
-  echo "cmake - Retrieve CMake source code. Size: 3 to 6MB"
+  echo "tecio - Retrieve Tecplot's <tecplot.com> TecIO source code. Size: 200 to 300kB"
 }
 
 
@@ -57,17 +48,18 @@ GE_update()
 {
   #first check available major versions (>=2.6)
   wget "$1" -O $testFile > /dev/null 2>&1
-  LIST_MAJOR_VERSIONS=`grep -e "v[2-9]\.[0-9]/" $testFile | \
-    sed -e 's=.*>\(v.*/\)</a.*=\1=' -e 's=/==' -e 's=v==' | \
-    grep -v -e "^2\.[0-5]" | \
+  LIST_MAJOR_VERSIONS=`grep -e "/tecio/[0-9]*/" $testFile | \
+    sed -e 's=.*/tecio/\([0-9]*\).*=\1=' | \
+    grep -v -e "^3[0-9]*" | \
+    grep -v -e "^200[0-8]" | \
     sort -u`
   [ -r "$versionCacheFile" ] && rm $versionCacheFile
 
   #now cycle through the major versions and list the available minor versions
   for mjv in $LIST_MAJOR_VERSIONS; do
-    wget "$1/v$mjv/" -O $testFile > /dev/null 2>&1
-    grep -e "cmake-[0-9]\.[0-9]\.[0-9]\.tar.gz" $testFile | \
-      sed -e 's=.*>\(cmake-.*\)\.tar.gz<.*=\1=' -e 's_-_=_' | \
+    wget "$1/$mjv/" -O $testFile > /dev/null 2>&1
+    grep -e "tecio[0-9]*\.$appFileExt" $testFile | \
+      sed -e 's=.*>\(tecio.*\)\.'$appFileExt'<.*=\1=' -e 's_tecio_tecio=_' | \
       sort -u >> $versionCacheFile
   done
 
@@ -81,8 +73,7 @@ GE_update()
 #
 GE_geturl()
 {
-  MAJORVERSION=`getMajorVersion $2`
-  echo ${1}v$MAJORVERSION/cmake-$2.$appFileExt
+  echo ${1}$2/tecio$2.$appFileExt
 }
 
 
@@ -91,7 +82,7 @@ GE_geturl()
 #
 GE_getfolder()
 {
-  echo cmake-$1
+  echo tecsrc
 }
 
 

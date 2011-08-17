@@ -14,7 +14,7 @@
 #   trademarked by and Copyright (C) OpenCFD Ltd.
 #
 # File
-#     etc/tools/get-em/cmake
+#     etc/tools/get-em/qt
 #
 # Description
 #     This script will gather the necessary information about the application.
@@ -25,19 +25,10 @@
 #
 #------------------------------------------------------------------------------
 
-versionVar="cmake_version"
-appName="cmake"
+versionVar="qt_version"
+appName="qt"
 appDefaultSep="" #none needed
 appFileExt="tar.gz"
-
-
-#
-# Shows the major version based on the whole version.
-#
-getMajorVersion()
-{
-  echo $1 | sed -e 's=\(^[0-9]\.[0-9]\).*=\1='
-}
 
 
 #
@@ -45,7 +36,7 @@ getMajorVersion()
 #
 GE_showDesc()
 {
-  echo "cmake - Retrieve CMake source code. Size: 3 to 6MB"
+  echo "qt - Retrieve the Qt package. Size: 150 to 240MB"
 }
 
 
@@ -55,22 +46,10 @@ GE_showDesc()
 #
 GE_update()
 {
-  #first check available major versions (>=2.6)
   wget "$1" -O $testFile > /dev/null 2>&1
-  LIST_MAJOR_VERSIONS=`grep -e "v[2-9]\.[0-9]/" $testFile | \
-    sed -e 's=.*>\(v.*/\)</a.*=\1=' -e 's=/==' -e 's=v==' | \
-    grep -v -e "^2\.[0-5]" | \
-    sort -u`
-  [ -r "$versionCacheFile" ] && rm $versionCacheFile
-
-  #now cycle through the major versions and list the available minor versions
-  for mjv in $LIST_MAJOR_VERSIONS; do
-    wget "$1/v$mjv/" -O $testFile > /dev/null 2>&1
-    grep -e "cmake-[0-9]\.[0-9]\.[0-9]\.tar.gz" $testFile | \
-      sed -e 's=.*>\(cmake-.*\)\.tar.gz<.*=\1=' -e 's_-_=_' | \
-      sort -u >> $versionCacheFile
-  done
-
+  grep -e "qt-everywhere-opensource-src-[4-9]\.[0-9]\.[0-9].$appFileExt" $testFile | \
+    sed -e 's=.*>qt-everywhere-opensource-src\(-.*\)\.'$appFileExt'<.*=\1=' -e 's_-_qt=_' | \
+    sort -u > $versionCacheFile
   rm $testFile
 }
 
@@ -81,8 +60,7 @@ GE_update()
 #
 GE_geturl()
 {
-  MAJORVERSION=`getMajorVersion $2`
-  echo ${1}v$MAJORVERSION/cmake-$2.$appFileExt
+  echo ${1}qt-everywhere-opensource-src-$2.$appFileExt
 }
 
 
@@ -91,7 +69,7 @@ GE_geturl()
 #
 GE_getfolder()
 {
-  echo cmake-$1
+  echo qt-everywhere-opensource-src-$1
 }
 
 

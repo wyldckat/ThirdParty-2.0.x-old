@@ -71,3 +71,5 @@ cgal_version=CGAL-3.8
 qt_version=4.7.3
 
 cmake_version=2.8.4
+
+tecio_version=2009

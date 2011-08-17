@@ -11,6 +11,7 @@
   Scripts for building third-party packages.
 
 * The approximate order of execution:
+  + get-em install buildtools=default paraview=default scotch=default openmpi=default
   + makeGcc
   + Allwmake
   + makeQt (optional)
