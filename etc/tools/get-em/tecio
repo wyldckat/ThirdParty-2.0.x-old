@@ -5,13 +5,14 @@
 #     This file is part of the branch "get-em" available here:
 #         https://github.com/wyldckat/ThirdParty-2.0.x/commits/get-em
 #
-#     These modifications have not been endorsed by OpenCFD Ltd nor SGI.
+#     These modifications have not been endorsed by OpenCFD Ltd, SGI corp nor
+#   the OpenFOAM Foundation.
 #
 #     It's licensed under the same license of the target software, namely GPL
 #   v3 or above (see <http://www.gnu.org/licenses/>).
 #
 #     The target software is OpenFOAM(R) <http://www.openfoam.com>, which is
-#   trademarked by and Copyright (C) OpenCFD Ltd.
+#   trademarked by and Copyright (C) OpenFOAM Foundation.
 #
 # File
 #     etc/tools/get-em/tecio

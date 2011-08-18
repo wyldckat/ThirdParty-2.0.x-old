@@ -5,13 +5,14 @@
 #     This file is part of the branch "get-em" available here:
 #         https://github.com/wyldckat/ThirdParty-2.0.x/commits/get-em
 #
-#     These modifications have not been endorsed by OpenCFD Ltd nor SGI.
+#     These modifications have not been endorsed by OpenCFD Ltd, SGI corp nor
+#   the OpenFOAM Foundation.
 #
 #     It's licensed under the same license of the target software, namely GPL
 #   v3 or above (see <http://www.gnu.org/licenses/>).
 #
 #     The target software is OpenFOAM(R) <http://www.openfoam.com>, which is
-#   trademarked by and Copyright (C) OpenCFD Ltd.
+#   trademarked by and Copyright (C) OpenFOAM Foundation.
 #
 # File
 #     get-em
@@ -27,7 +28,6 @@
 #   * Ability to choose/change mirrors, when more than one site is available.
 #   * When available, check the md5/sig checksum on the downloaded packages.
 #   * Ability to pick package format: tar.gz, tar.bz2, zip
-#   * Option for dry-run, which will only generate a list of files to download.
 #
 #------------------------------------------------------------------------------
 
@@ -69,6 +69,7 @@ Usage
      ./$Script ca(che) [APPLICATION]
      ./$Script so(urce) APPLICATION1=VERSION [APPLICATION2=VERSION] [...]
      ./$Script do(wnload) APPLICATION1=VERSION [APPLICATION2=VERSION] [...]
+     ./$Script od(ownload) APPLICATION1=VERSION [APPLICATION2=VERSION] [...]
      ./$Script un(pack) APPLICATION1=VERSION [APPLICATION2=VERSION] [...]
      ./$Script re(move) APPLICATION1=VERSION [APPLICATION2=VERSION] [...]
      ./$Script pu(rge) APPLICATION1=VERSION [APPLICATION2=VERSION] [...]
@@ -80,6 +81,7 @@ Valid options (use only one per command)
   cache    : shows the list of already downloaded packages.
   source   : download (if necessary) and unpack the desired applications and respective versions.
   download : download (if necessary) the desired applications and respective versions.
+  odownload: generate a 'wget' based command list for downloading the applications missing from the chosen list.
   unpack   : unpack (if available) the desired applications and respective versions.
   remove   : remove the unpacked folders the desired applications and respective versions.
   purge    : remove from the cache the downloaded packages for the desired applications and respective versions.
@@ -109,6 +111,7 @@ versionsOpt=0
 updateOpt=0
 cacheOpt=0
 downloadOpt=0
+offlineDownloadOpt=0
 unpackOpt=0
 removeOpt=0
 purgeOpt=0
@@ -136,6 +139,9 @@ so | source)
     ;;
 do | download)
     downloadOpt=1
+    ;;
+od | odownload)
+    offlineDownloadOpt=1
     ;;
 un | unpack)
     unpackOpt=1
@@ -200,6 +206,12 @@ elif [ $downloadOpt -eq 1 -o $unpackOpt -eq 1 ]; then
   if [ $unpackOpt -eq 1 ]; then
     unpackApps $*
   fi
+
+elif [ $offlineDownloadOpt -eq 1 ]; then
+
+  [ "$#" -lt 2 ] && usage "Insufficient arguments..."
+  shift #a must in this case
+  generateDownloadCommandsForApps $*
 
 elif [ $removeOpt -eq 1 ]; then
 

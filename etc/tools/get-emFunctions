@@ -4,13 +4,14 @@
 #     This file is part of the branch "get-em" available here:
 #         https://github.com/wyldckat/ThirdParty-2.0.x/commits/get-em
 #
-#     These modifications have not been endorsed by OpenCFD Ltd nor SGI.
+#     These modifications have not been endorsed by OpenCFD Ltd, SGI corp nor
+#   the OpenFOAM Foundation.
 #
 #     It's licensed under the same license of the target software, namely GPL
 #   v3 or above (see <http://www.gnu.org/licenses/>).
 #
 #     The target software is OpenFOAM(R) <http://www.openfoam.com>, which is
-#   trademarked by and Copyright (C) OpenCFD Ltd.
+#   trademarked by and Copyright (C) OpenFOAM Foundation.
 #
 # File
 #     etc/tools/get-emFunctions
@@ -260,6 +261,46 @@ downloadApps()
     app=${appver%=*}
     ver=${appver##*=}
     downloadApp $app $ver
+  done
+}
+
+
+#
+# generate the list of commands for downloading the chosen app $1 and
+# respective version $2
+#
+generateDownloadCommandsForApp()
+{
+  if [ -n "`isValidApp $1`" ]; then
+    MIRRORURL=`getMirrorForApp $1`
+    REALVERSION=`$PATH_TO_GE_SCRIPTS/$1 getversion $MIRRORURL $2`
+    FILEURL=`$PATH_TO_GE_SCRIPTS/$1 geturl $MIRRORURL $REALVERSION`
+    FILENAME=`$PATH_TO_GE_SCRIPTS/$1 getfilename $REALVERSION`
+    ISCACHED=`$PATH_TO_GE_SCRIPTS/$1 cache $REALVERSION`
+
+    #purge the bad download
+    [ -n "$ISCACHED" ] && [ "$ISCACHED" = "INCOMPLETE" ] && \
+      $PATH_TO_GE_SCRIPTS/$1 purge $REALVERSION && ISCACHED=""
+
+    if [ -z "$ISCACHED" ]; then
+      echo wget \"$FILEURL\" -O download/$FILENAME
+    fi
+  else
+    usage "Application '$1' is invalid."
+  fi
+}
+
+
+#
+# generate the list of commands for downloading the chosen apps and respective
+# versions (app=version)
+#
+generateDownloadCommandsForApps()
+{
+  for appver in $*; do
+    app=${appver%=*}
+    ver=${appver##*=}
+    generateDownloadCommandsForApp $app $ver
   done
 }
 

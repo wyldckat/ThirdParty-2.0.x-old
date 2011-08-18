@@ -4,13 +4,14 @@
 #     This file is part of the branch "get-em" available here:
 #         https://github.com/wyldckat/ThirdParty-2.0.x/commits/get-em
 #
-#     These modifications have not been endorsed by OpenCFD Ltd nor SGI.
+#     These modifications have not been endorsed by OpenCFD Ltd, SGI corp nor
+#   the OpenFOAM Foundation.
 #
 #     It's licensed under the same license of the target software, namely GPL
 #   v3 or above (see <http://www.gnu.org/licenses/>).
 #
 #     The target software is OpenFOAM(R) <http://www.openfoam.com>, which is
-#   trademarked by and Copyright (C) OpenCFD Ltd.
+#   trademarked by and Copyright (C) OpenFOAM Foundation.
 #
 # File
 #     etc/tools/get-emScriptFunctions
@@ -99,6 +100,22 @@ USAGE
 
 # ---------------------------------------------------------- start of functions
 
+
+#
+# Validate if version $2 is valid, based on the available mirror url $1.
+# Returns text messages: "" for valid, "INVALID" for invalid.
+#
+GETEM_version_validation()
+{
+  VERSION=`GETEM_versions $1 | grep -e '='$2'$'`
+  if [ -z "$VERSION" ]; then
+    echo "INVALID"
+  else
+    echo ""
+  fi
+}
+
+
 #
 # Call GE_showDesc for the real description, predefined in the calling
 # script
@@ -142,6 +159,10 @@ GETEM_geturl()
 {
   [ "$#" -lt 2 ] && GETEM_usage "Missing MIRROR_URL and/or VERSION for url retrieval."
   VERSION=`GETEM_getversion $1 $2`
+  if [ -n "`GETEM_version_validation $1 $VERSION`" ]; then
+    echo "Version $2 for $appName is invalid."
+    exit 1
+  fi
   GE_geturl $1 $VERSION
 }
 
