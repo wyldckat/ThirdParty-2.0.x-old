@@ -227,8 +227,14 @@ downloadApp()
     ISCACHED=`$PATH_TO_GE_SCRIPTS/$1 cache $REALVERSION`
 
     #purge the bad download
-    [ -n "$ISCACHED" ] && [ "$ISCACHED" = "INCOMPLETE" ] && \
-      $PATH_TO_GE_SCRIPTS/$1 purge $REALVERSION && ISCACHED=""
+    if [ -n "$ISCACHED" ]; then
+      if [ "$ISCACHED" = "INCOMPLETE" ]; then
+        $PATH_TO_GE_SCRIPTS/$1 purge $REALVERSION && ISCACHED=""
+      elif [ "$ISCACHED" = "EXISTS" ]; then
+        FILENAMECHECK=`$PATH_TO_GE_SCRIPTS/$1 verifyfile $REALVERSION`
+        [ -z "$FILENAMECHECK" ] && $PATH_TO_GE_SCRIPTS/$1 purge $REALVERSION && ISCACHED=""
+      fi
+    fi
 
     if [ -z "$ISCACHED" ]; then
       downloadFile $FILENAME $FILEURL

@@ -251,8 +251,13 @@ GETEM_cache()
 {
   [ "$#" -lt 1 ] && GETEM_usage "Missing VERSION for cache check."
   FILENAME=`GETEM_getfilename $1`
-  [ -r download/$FILENAME.complete ] && echo "YES"
-  [ -r download/$FILENAME.incomplete ] && echo "INCOMPLETE"
+  if [ -r download/$FILENAME.complete ]; then
+    echo "YES"
+  elif [ -r download/$FILENAME.incomplete ]; then
+    echo "INCOMPLETE"
+  elif [ -r download/$FILENAME ]; then
+    echo "EXISTS"
+  fi
 }
 
 
