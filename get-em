@@ -25,9 +25,9 @@
 #   this script is an over-simplified version of any package manager.
 #
 # TODO
+#   * Still missing the combo package downloading features...
 #   * Ability to choose/change mirrors, when more than one site is available.
-#   * When available, check the md5/sig checksum on the downloaded packages.
-#   * Ability to pick package format: tar.gz, tar.bz2, zip
+#   * Ability to pick package format, when available: tar.gz, tar.bz2, zip
 #
 #------------------------------------------------------------------------------
 
