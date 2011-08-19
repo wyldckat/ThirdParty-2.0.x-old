@@ -484,7 +484,7 @@ optimizeMirrorsForApp()
       echo "Timmings for the list of mirrors for application '$1':"
       $PATH_TO_GE_SCRIPTS/$1 optmirrors
     else
-      echo "This application '$1' doesn't need optimization."
+      echo "This application '$1' doesn't need mirror list optimization."
     fi
   else
     usage "Application '$1' is invalid."
