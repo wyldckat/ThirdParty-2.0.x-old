@@ -434,15 +434,19 @@ GETEM_unpackFile()
       echo "Could not unpack $FILENAME"
       exit 1
     elif [ $DO_UNPACK_IT -eq 1 ]; then
+      TAR_STRIP_OPTION="--strip-components"
+      if [ -n "`tar --help | grep strip-path`" ]; then
+        TAR_STRIP_OPTION="--strip-path"
+      fi
       case $appFileExt in
       tar.gz)
         mkdir -p "$FOLDER" && \
-          tar -xzf download/$FILENAME -C "$FOLDER" --strip-components=$LEVELS2KILL
+          tar -xzf download/$FILENAME -C "$FOLDER" $TAR_STRIP_OPTION=$LEVELS2KILL
         break
         ;;
       tar.bz2)
         mkdir -p "$FOLDER" && \
-          tar -xjf download/$FILENAME -C "$FOLDER" --strip-components=$LEVELS2KILL
+          tar -xjf download/$FILENAME -C "$FOLDER" $TAR_STRIP_OPTION=$LEVELS2KILL
         break
         ;;
       zip)
