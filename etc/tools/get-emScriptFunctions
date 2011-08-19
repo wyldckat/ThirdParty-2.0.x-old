@@ -148,7 +148,7 @@ GETEM_version_validation()
 GETEM_moveFilesIntoPlace()
 {
   if [ $2 -eq 1 ]; then
-    mv "$1/*/*" "$1/"
+    mv "$1"/*/* "$1"/
   elif [ $2 -gt 1 ]; then
     echo "Application '$appName': in compatibility mode with tar versions \
 < 1.40, only level <=1 path stripping is supported." >&2
