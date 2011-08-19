@@ -217,10 +217,15 @@ GETEM_optmirrors()
   if [ `cat $serverMirrorFile | wc -l` -gt 1 ]; then
     [ -r $testFile ] && rm $testFile
     for mirror in `cat $serverMirrorFile`; do
-      timednow=`export LC_ALL=C; wget -O /dev/null $mirror 2>&1 | grep -e "B/s)" | sed -e 's=.*(\([0-9.]* [a-zA-Z]B/s\).*=\1='`
+      timednow=`export LC_ALL=C; wget -O /dev/null $mirror 2>&1 | \
+                grep -e "B/s)" | \
+                sed -e 's=.*(\([0-9.]* [a-zA-Z]B/s\).*=\1='`
       echo $timednow - $mirror
+      timednow=`echo $timednow | sed -e 's=\..* = =' | \
+                sed -e 's= K=000 =' -e 's= M=000000 =' \
+                    -e 's= G=000000000 =' -e 's= T=000000000000 ='`
       echo $timednow $mirror >> $testFile
-      sort -hr $testFile | sed -e 's=^.* ==' > $serverMirrorFile
+      sort -nr $testFile | sed -e 's=^.* ==' > $serverMirrorFile
     done
     [ -r $testFile ] && rm $testFile
   fi
