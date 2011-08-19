@@ -220,11 +220,11 @@ GETEM_optmirrors()
       echo 99999 $mirror >> $testFile
     else
       serverurl=${server_folder%%/*}
-      timednow=`export LC_ALL=C; ping -Aqc 3 -s 120 $serverurl | sed -nr 's/.*time\ ([0-9]+)ms.*/\1/p'`
-      echo $timednow ms - $serverurl
+      timednow=`export LC_ALL=C; wget -O /dev/null $serverurl 2>&1 | grep -e "B/s)" | sed -e 's=.*(\([0-9.]* [a-zA-Z]B/s\).*=\1='`
+      echo $timednow - $serverurl
       echo $timednow $mirror >> $testFile
     fi
-    sort -n $testFile | sed -e 's=^[0-9]* ==' > $serverMirrorFile
+    sort -hr $testFile | sed -e 's=^.* ==' > $serverMirrorFile
   done
   [ -r $testFile ] && rm $testFile
 }
