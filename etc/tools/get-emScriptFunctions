@@ -54,6 +54,7 @@
 #These will register pertinent information for the calling script
 Script=${0##*/}
 path2Script=${0%/*}
+serverMirrorFile=$path2Script/$Script.mirrors
 versionCacheFile=$path2Script/$Script.cache
 testFile="$Script.dumpfile.$$"
 defaultsFile="etc/defaults.sh"
@@ -74,6 +75,9 @@ Usage
      $Script update MIRROR_URL
      $Script versions MIRROR_URL
      $Script unroll VERSION
+     $Script getmirror
+     $Script listmirrors
+     $Script optmirrors
      $Script geturl MIRROR_URL VERSION
      $Script getversion MIRROR_URL VERSION
      $Script getfilename VERSION
@@ -83,18 +87,21 @@ Usage
      $Script unpack VERSION
 
 Valid options (use only one per command)
-  description - show the description for this application.
-  update MIRROR_URL - updates the list of versions available.
-  versions MIRROR_URL - show the list of versions available for this application.
-  unroll VERSION - in case of combo packages, show the list of packages; otherwise, return the same "app=version".
-  geturl MIRROR_URL VERSION - get the link for the desired version to download.
-  getversion MIRROR_URL VERSION - get the true version.
-  getfilename VERSION - get the filename for the desired version (true version only).
-  verifyfile VERSION - verify if the package's integrity for the desired version (true version only).
-  cache VERSION - check if the version is already downloaded. Shows YES if available.
-  purge VERSION - removes the downloaded package for the selected version.
-  remove VERSION - removes the application source folder for the selected version.
-  unpack VERSION - unpacks the downloaded package for the selected version.
+  description          show the description for this application.
+  update MIRROR_URL    updates the list of versions available.
+  versions MIRROR_URL  show the list of versions available for this application.
+  unroll VERSION       in case of combo packages, show the list of packages; otherwise, return the same "app=version".
+  getmirror            show the first mirror in the list.
+  listmirrors          show the list of mirrors.
+  optmirrors           optimize the list of mirrors.
+  geturl MIRROR_URL VERSION      get the link for the desired version to download.
+  getversion MIRROR_URL VERSION  get the true version.
+  getfilename VERSION  get the filename for the desired version (true version only).
+  verifyfile VERSION   verify if the package's integrity for the desired version (true version only).
+  cache VERSION        check if the version is already downloaded. Shows YES if available.
+  purge VERSION        removes the downloaded package for the selected version.
+  remove VERSION       removes the application source folder for the selected version.
+  unpack VERSION       unpacks the downloaded package for the selected version.
 
 USAGE
     exit 1
@@ -172,6 +179,54 @@ GETEM_versions()
   [ ! -r "$versionCacheFile" ] && GETEM_update $1 $2 #force an update
   [ ! -r "$versionCacheFile" ] && GETEM_usage "Unable to update the list of versions"
   cat $versionCacheFile
+}
+
+
+#
+# Show the first mirror on the list
+#
+GETEM_getmirror()
+{
+  if [ -r $serverMirrorFile ]; then
+    head -n 1 $serverMirrorFile
+  else
+    usage "No mirrors available for application '$Script'."
+  fi
+}
+
+#
+# Show all mirrors
+#
+GETEM_listmirrors()
+{
+  if [ -r $serverMirrorFile ]; then
+    cat $serverMirrorFile
+  else
+    usage "No mirrors available for application '$Script'."
+  fi
+}
+
+
+#
+# Sort mirrors by closest to farthest.
+#
+GETEM_optmirrors()
+{
+  [ -r $testFile ] && rm $testFile
+  for mirror in `cat $serverMirrorFile`; do
+    server_folder=${mirror##*://}
+    if [ "$server_folder" = "$mirror" ]; then
+      #assume farthest server
+      echo 99999 $mirror >> $testFile
+    else
+      serverurl=${server_folder%%/*}
+      timednow=`export LC_ALL=C; ping -Aqc 3 -s 120 $serverurl | sed -nr 's/.*time\ ([0-9]+)ms.*/\1/p'`
+      echo $timednow ms - $serverurl
+      echo $timednow $mirror >> $testFile
+    fi
+    sort -n $testFile | sed -e 's=^[0-9]* ==' > $serverMirrorFile
+  done
+  [ -r $testFile ] && rm $testFile
 }
 
 
@@ -413,57 +468,22 @@ GETEM_removeFolder()
 
 # automatic body of the calling script ----------------------------------------
 case $1 in
-description)
-  GETEM_showDescription
-  break
-  ;;
-update)
-  GETEM_update $2 $3
-  break
-  ;;
-versions)
-  GETEM_versions $2 $3
-  break
-  ;;
-geturl)
-  GETEM_geturl $2 $3
-  break
-  ;;
-unroll)
-  GETEM_unroll $2
-  break
-  ;;
-getversion)
-  GETEM_getversion $2 $3
-  break
-  ;;
-getfilename)
-  GETEM_getfilename $2
-  break
-  ;;
-verifyfile)
-  GETEM_verifyfile $2 $3
-  break
-  ;;
-cache)
-  GETEM_cache $2
-  break
-  ;;
-purge)
-  GETEM_purge $2
-  break
-  ;;
-unpack)
-  GETEM_unpackFile $2
-  break
-  ;;
-remove)
-  GETEM_removeFolder $2
-  break
-  ;;
-*)
-  usage "Invalid option '$1'"
-  ;;
+description) GETEM_showDescription ;;
+update)      GETEM_update $2 $3 ;;
+versions)    GETEM_versions $2 $3 ;;
+getmirror)   GETEM_getmirror ;;
+listmirrors) GETEM_listmirrors ;;
+optmirrors) GETEM_optmirrors ;;
+geturl)      GETEM_geturl $2 $3 ;;
+unroll)      GETEM_unroll $2 ;;
+getversion)  GETEM_getversion $2 $3 ;;
+getfilename) GETEM_getfilename $2 ;;
+verifyfile)  GETEM_verifyfile $2 $3 ;;
+cache)       GETEM_cache $2 ;;
+purge)       GETEM_purge $2 ;;
+unpack)      GETEM_unpackFile $2 ;;
+remove)      GETEM_removeFolder $2 ;;
+*)           usage "Invalid option '$1'" ;;
 esac
 
 

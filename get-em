@@ -72,6 +72,8 @@ Usage
      ./$Script un(pack) APPLICATION1=VERSION [APPLICATION2=VERSION] [...]
      ./$Script re(move) APPLICATION1=VERSION [APPLICATION2=VERSION] [...]
      ./$Script pu(rge) APPLICATION1=VERSION [APPLICATION2=VERSION] [...]
+     ./$Script mi(rrors) [APPLICATION]
+     ./$Script mi(rrors)-opt(imize) [APPLICATION]
 
 Valid options (use only one per command)
   list     : shows a list of the retrievable software applications.
@@ -84,6 +86,8 @@ Valid options (use only one per command)
   unpack   : unpack (if available) the desired applications and respective versions.
   remove   : remove the unpacked folders the desired applications and respective versions.
   purge    : remove from the cache the downloaded packages for the desired applications and respective versions.
+  mirrors  : list the mirrors available for one or all applications.
+  mi-opt    : find the closest mirror to be used for one or all applications.
 
 Special application markers and versions
   APP=default   : APP is the name of the desired application, therefore downloading the pre-defined default version.
@@ -104,93 +108,91 @@ USAGE
 [ "$#" -eq 0 ] && usage
 
 #secure local variables
-listOpt=0
-versionsOpt=0
-updateOpt=0
-cacheOpt=0
 downloadOpt=0
-offlineDownloadOpt=0
 unpackOpt=0
-removeOpt=0
-purgeOpt=0
 
 # parse primary option
 case "$1" in
-h | he | help | -h | -help)
-    usage
-    ;;
+h | he | help | -h | -help) usage ;;
 li | list)
-    listOpt=1
-    ;;
-up | update)
-    updateOpt=1
-    ;;
-ve | versions)
-    versionsOpt=1
-    ;;
-ca | cache)
-    cacheOpt=1
-    ;;
-so | source)
-    downloadOpt=1
-    unpackOpt=1
-    ;;
-do | download)
-    downloadOpt=1
-    ;;
-od | odownload)
-    offlineDownloadOpt=1
-    ;;
-un | unpack)
-    unpackOpt=1
-    ;;
-re | remove)
-    removeOpt=1
-    ;;
-pu | purge)
-    purgeOpt=1
-    ;;
-*)
-    usage "unknown option/argument: '$1'"
-    ;;
-esac
-
-#now, according to each option, parse and handle the remaining options
-if [ $listOpt -eq 1 ]; then
-
   [ "$#" -gt 1 ] && usage "Too many arguments..."
   displayValidApps
-
-elif [ $updateOpt -eq 1 ]; then
-
+  ;;
+up | update)
   [ "$#" -gt 2 ] && usage "Too many arguments..."
   if [ "$#" -eq 2 ]; then
     updateVersion $2
   else
     updateVersions
   fi
-
-elif [ $versionsOpt -eq 1 ]; then
-
+  ;;
+ve | versions)
   [ "$#" -gt 2 ] && usage "Too many arguments..."
-
   if [ "$#" -eq 2 ]; then
     displayVersionsForApp $2
   else
     displayVersionsForAll
   fi
-
-elif [ $cacheOpt -eq 1 ]; then
-
+  ;;
+ca | cache)
   [ "$#" -gt 2 ] && usage "Too many arguments..."
-
   if [ "$#" -eq 2 ]; then
     displayCacheForApp $2
   else
     displayCacheForAll
   fi
+  ;;
+so | source)
+  downloadOpt=1
+  unpackOpt=1
+  ;;
+do | download)
+  downloadOpt=1
+  ;;
+un | unpack)
+  unpackOpt=1
+  ;;
+od | odownload)
+  [ "$#" -lt 2 ] && usage "Insufficient arguments..."
+  #Unroll the combo packages and reset the list of apps and respective versions
+  shift ; set -- `unrollAppsAndVersions $*`
+  generateDownloadCommandsForApps $*
+  ;;
+re | remove)
+  [ "$#" -lt 2 ] && usage "Insufficient arguments..."
+  #Unroll the combo packages and reset the list of apps and respective versions
+  shift ; set -- `unrollAppsAndVersions $*`
+  removeApps $*
+  ;;
+pu | purge)
+  [ "$#" -lt 2 ] && usage "Insufficient arguments..."
+  #Unroll the combo packages and reset the list of apps and respective versions
+  shift ; set -- `unrollAppsAndVersions $*`
+  purgeApps $*
+  ;;
+mi | mirrors)
+  [ "$#" -gt 2 ] && usage "Too many arguments..."
+  if [ "$#" -eq 2 ]; then
+    displayMirrorsForApp $2
+  else
+    displayMirrorsForAll
+  fi
+  ;;
+mi-opt | mirrors-opt | mi-optimize | mirrors-optimize)
+  [ "$#" -gt 2 ] && usage "Too many arguments..."
+  if [ "$#" -eq 2 ]; then
+    optimizeMirrorsForApp $2
+  else
+    optimizeMirrorsForAll
+  fi
+  ;;
+*)
+  usage "unknown option/argument: '$1'"
+  ;;
+esac
 
-elif [ $downloadOpt -eq 1 -o $unpackOpt -eq 1 ]; then
+#download and/or unpack
+if [ $downloadOpt -eq 1 -o $unpackOpt -eq 1 ]; then
 
   [ "$#" -lt 2 ] && usage "Insufficient arguments..."
 
@@ -205,25 +207,6 @@ elif [ $downloadOpt -eq 1 -o $unpackOpt -eq 1 ]; then
   if [ $unpackOpt -eq 1 ]; then
     unpackApps $*
   fi
-
-elif [ $offlineDownloadOpt -eq 1 ]; then
-
-  [ "$#" -lt 2 ] && usage "Insufficient arguments..."
-  #Unroll the combo packages and reset the list of apps and respective versions
-  shift ; set -- `unrollAppsAndVersions $*`
-  generateDownloadCommandsForApps $*
-
-elif [ $removeOpt -eq 1 ]; then
-
-  #Unroll the combo packages and reset the list of apps and respective versions
-  shift ; set -- `unrollAppsAndVersions $*`
-  removeApps $*
-
-elif [ $purgeOpt -eq 1 ]; then
-
-  #Unroll the combo packages and reset the list of apps and respective versions
-  shift ; set -- `unrollAppsAndVersions $*`
-  purgeApps $*
 
 fi
 

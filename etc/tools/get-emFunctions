@@ -125,14 +125,11 @@ isValidApp()
 
 
 #
-# Get a mirror URL from the file $APP.mirrors
-# TODO: ability to pick any mirror from the list
+# Get a mirror URL
 #
 getMirrorForApp()
 {
-  if [ -r $PATH_TO_GE_SCRIPTS/$1.mirrors ]; then
-    head -n 1 $PATH_TO_GE_SCRIPTS/$1.mirrors
-  else
+  if ! $PATH_TO_GE_SCRIPTS/$1 getmirror; then
     usage "No mirrors available for application '$1'."
   fi
 }
@@ -448,6 +445,57 @@ purgeApps()
   fi
 }
 
+
+#
+# show the list of mirrors for the chosen application
+#
+displayMirrorsForApp()
+{
+  if [ -n "`isValidApp $1`" ]; then
+    if [ `$PATH_TO_GE_SCRIPTS/$1 listmirrors | grep -e "://" | wc -l` -gt 0 ]; then
+      echo "List of mirrors for application '$1':"
+      $PATH_TO_GE_SCRIPTS/$1 listmirrors | sed -e 's=^=    ='
+    fi
+  else
+    usage "Application '$1' is invalid."
+  fi
+}
+
+
+#
+# show the list of mirrors for all valid application
+#
+displayMirrorsForAll()
+{
+  for app in $GE_VALID_APPS; do
+    displayMirrorsForApp $app
+  done
+}
+
+
+#
+# optimize the list of mirrors for the chosen application
+# In other words, sort the list of mirrors in order of the closest mirror.
+#
+optimizeMirrorsForApp()
+{
+  if [ -n "`isValidApp $1`" ]; then
+    $PATH_TO_GE_SCRIPTS/$1 optmirrors
+  else
+    usage "Application '$1' is invalid."
+  fi
+}
+
+
+#
+# optimize the list of mirrors for the all applications
+#
+optimizeMirrorsForAll()
+{
+  for app in $GE_VALID_APPS; do
+    optimizeMirrorsForApp $app
+  done
+}
 
 # ----------------------------------------------------------------- end of functions
 
