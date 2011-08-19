@@ -69,9 +69,11 @@ GE_update()
     wget "$1/v$mjv/" -O $testFile > /dev/null 2>&1
     grep -e "ParaView-[0-9]\.[0-9]*\.[0-9]*\.$appFileExt" $testFile | \
       sed -e 's=.*>\(ParaView-.*\)\.'$appFileExt'<.*=\1=' -e 's_-_=_' | \
-      sort -u >> $versionCacheFile
+      sort -uV >> $versionCacheFile
   done
 
+  sort -V $versionCacheFile > $testFile
+  cat $testFile > $versionCacheFile
   rm $testFile
 }
 
