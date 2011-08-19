@@ -60,16 +60,15 @@ GE_update()
   wget "$1" -O $testFile > /dev/null 2>&1
   LIST_MAJOR_VERSIONS=`grep -e "v[3-9]\.[0-9]*/" $testFile | \
     sed -e 's=.*>\(v.*/\)</a.*=\1=' -e 's=/==' -e 's=v==' | \
-    grep -v -e "^[1-2]\.[0-9]*" | \
-    grep -v -e "^3\.[0-6]*" | \
+    grep -v -e "^3\.[0-6]$" | \
     sort -u`
   [ -r "$versionCacheFile" ] && rm $versionCacheFile
 
   #now cycle through the major versions and list the available minor versions
   for mjv in $LIST_MAJOR_VERSIONS; do
     wget "$1/v$mjv/" -O $testFile > /dev/null 2>&1
-    grep -e "ParaView-[0-9]\.[0-9]\.[0-9]\.tar.gz" $testFile | \
-      sed -e 's=.*>\(ParaView-.*\)\.tar.gz<.*=\1=' -e 's_-_=_' | \
+    grep -e "ParaView-[0-9]\.[0-9]*\.[0-9]*\.$appFileExt" $testFile | \
+      sed -e 's=.*>\(ParaView-.*\)\.'$appFileExt'<.*=\1=' -e 's_-_=_' | \
       sort -u >> $versionCacheFile
   done
 

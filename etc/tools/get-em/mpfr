@@ -48,9 +48,8 @@ GE_showDesc()
 GE_update()
 {
   wget "$1" -O $testFile > /dev/null 2>&1
-  grep -e "mpfr-[4]\.[3-9]\.[0-9]" $testFile | \
-    sed -e 's=.*>\(mpfr-.*\)<.*=\1=' -e 's=/==' -e 's_-_=_' | \
-    grep -e "[0-9]\.[0-9]\.[0-9]$" | \
+  grep -e "mpfr-[0-9]\.[0-9]\.[0-9].${appFileExt}<" $testFile | \
+    sed -e 's=.*>\(mpfr-.*\)\.'$appFileExt'<.*=\1=' -e 's_-_=_' | \
     sort -u > $versionCacheFile
   rm $testFile
 }

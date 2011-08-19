@@ -49,9 +49,10 @@ java, objc). Size: 60 to 100MB"
 GE_update()
 {
   wget "$1" -O $testFile > /dev/null 2>&1
-  grep -e "gcc-[4]\.[3-9]\.[0-9]" $testFile | \
-    sed -e 's=.*>\(gcc-.*\)<.*=\1=' -e 's=/==' -e 's_-_=_' | \
-    grep -e "[0-9]\.[0-9]\.[0-9]$" | \
+  grep -e "gcc-[0-9]\.[0-9]\.[0-9]" $testFile | \
+    grep -v -e "gcc-[0-3]\.[0-9]\.[0-9]" | \
+    grep -v -e "gcc-4\.[0-2]\.[0-9]" | \
+    sed -e 's=.*>\(gcc-.*\)/<.*=\1=' -e 's_-_=_' | \
     sort -u > $versionCacheFile
   rm $testFile
 }

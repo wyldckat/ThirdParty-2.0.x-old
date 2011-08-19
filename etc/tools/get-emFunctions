@@ -184,6 +184,30 @@ displayVersionsForAll()
 
 
 #
+# unroll combo packages. Receives the application/combo $1 and the version $2
+#
+unrollAppNVer()
+{
+  if [ -n "`isValidApp $1`" ]; then
+    $PATH_TO_GE_SCRIPTS/$1 unroll $2 || exit 1
+  fi
+}
+
+
+#
+# unroll the list of combo packages
+#
+unrollAppsAndVersions()
+{
+  for appver in $*; do
+    app=${appver%=*}
+    ver=${appver##*=}
+    unrollAppNVer $app $ver
+  done
+}
+
+
+#
 # show the list of versions already fully downloaded for the chosen application
 #
 displayCacheForApp()

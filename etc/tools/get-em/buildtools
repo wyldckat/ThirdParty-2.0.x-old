@@ -15,21 +15,21 @@
 #   trademarked by and Copyright (C) OpenFOAM Foundation.
 #
 # File
-#     etc/tools/get-em/gmp
+#     etc/tools/get-em/buildtools
 #
 # Description
-#     This script will gather the necessary information about the application.
+#     This script will provide the list of applications related to this profile.
 #     This script expects to be executed in the base folder where the get-em script is.
-#
-# FIXME
-#   * Currently it is hard-coded to use tar.gz.
 #
 #------------------------------------------------------------------------------
 
-versionVar="gmp_version"
-appName="gmp"
-appDefaultSep="-"
-appFileExt="tar.gz"
+#redundance for default version translation
+BUILDTOOLS_VERSION=default
+
+versionVar="BUILDTOOLS_VERSION"
+appName="buildtools"
+appDefaultSep="" #none needed
+appFileExt="" #none needed
 
 
 #
@@ -37,7 +37,7 @@ appFileExt="tar.gz"
 #
 GE_showDesc()
 {
-  echo "gmp - Retrieve the GMP package. Size: 2 to 3MB"
+  echo "buildtools - Retrieve all of the basic tools for compiling and building: gcc, gmp, mpfr, mpc."
 }
 
 
@@ -47,43 +47,33 @@ GE_showDesc()
 #
 GE_update()
 {
-  wget "$1" -O $testFile > /dev/null 2>&1
-  grep -e "gmp-[0-9]\.[0-9]\.[0-9].${appFileExt}<" $testFile | \
-    sed -e 's=.*>\(gmp-.*\)\.'$appFileExt'<.*=\1=' -e 's_-_=_' | \
-    grep -v -e "=[0-3]\.[0-9]" | \
-    grep -v -e "=4\.[0-2]" | \
-    sort -u > $versionCacheFile
-  rm $testFile
+  echo default > $versionCacheFile
+  echo latest >> $versionCacheFile
 }
 
 
 #
-# Receives the mirror url $1, the real version $2 and the variable $appFileExt.
-# Shows the full url for the file to be downloaded.
+# Unroll the version $1, in case it's a combo package.
 #
-GE_geturl()
+GE_unroll()
 {
-  echo ${1}gmp-$2.$appFileExt
-}
-
-
-#
-# Echoes the relative path of the target folder. Receives the real version $1.
-#
-GE_getfolder()
-{
-  echo gmp-$1
-}
-
-
-#
-# Echoes the number of folder levels counting from the left that the unpacker
-# should drop. This is (or at least it should be) a prevention mechanism for
-# tar/zipbombs.
-#
-GE_levels()
-{
-  echo 1
+  case $1 in
+  default)
+    echo gcc=default
+    echo gmp=default
+    echo mpfr=default
+    [ -n "`. $defaultsFile ; eval echo \$mpc_version | sed 's/mpc-//'`" ] && \
+      echo mpc=default
+    break
+    ;;
+  latest)
+    echo gcc=latest
+    echo gmp=latest
+    echo mpfr=latest
+    echo mpc=latest
+    break
+    ;;
+  esac
 }
 
 

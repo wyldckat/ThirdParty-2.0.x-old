@@ -25,7 +25,6 @@
 #   this script is an over-simplified version of any package manager.
 #
 # TODO
-#   * Still missing the combo package downloading features...
 #   * Ability to choose/change mirrors, when more than one site is available.
 #   * Ability to pick package format, when available: tar.gz, tar.bz2, zip
 #
@@ -87,7 +86,6 @@ Valid options (use only one per command)
   purge    : remove from the cache the downloaded packages for the desired applications and respective versions.
 
 Special application markers and versions
-  buildtools=default : download and unpack the default applications necessary for the currently selected WM_ARCH+WM_COMPILER build rule.
   APP=default   : APP is the name of the desired application, therefore downloading the pre-defined default version.
   APP=latest    : APP is the name of the desired application, therefore downloading the latest version available.
 
@@ -196,7 +194,8 @@ elif [ $downloadOpt -eq 1 -o $unpackOpt -eq 1 ]; then
 
   [ "$#" -lt 2 ] && usage "Insufficient arguments..."
 
-  shift #a must in this case
+  #Unroll the combo packages and reset the list of apps and respective versions
+  shift ; set -- `unrollAppsAndVersions $*`
 
   if [ $downloadOpt -eq 1 ]; then
     downloadApps $*
@@ -210,17 +209,20 @@ elif [ $downloadOpt -eq 1 -o $unpackOpt -eq 1 ]; then
 elif [ $offlineDownloadOpt -eq 1 ]; then
 
   [ "$#" -lt 2 ] && usage "Insufficient arguments..."
-  shift #a must in this case
+  #Unroll the combo packages and reset the list of apps and respective versions
+  shift ; set -- `unrollAppsAndVersions $*`
   generateDownloadCommandsForApps $*
 
 elif [ $removeOpt -eq 1 ]; then
 
-  shift #a must in this case
+  #Unroll the combo packages and reset the list of apps and respective versions
+  shift ; set -- `unrollAppsAndVersions $*`
   removeApps $*
 
 elif [ $purgeOpt -eq 1 ]; then
 
-  shift #a must in this case
+  #Unroll the combo packages and reset the list of apps and respective versions
+  shift ; set -- `unrollAppsAndVersions $*`
   purgeApps $*
 
 fi
