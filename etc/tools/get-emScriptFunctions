@@ -143,6 +143,21 @@ GETEM_version_validation()
 
 
 #
+# Tries to do a manual path stripping of $2 levels on the folder $1.
+#
+GETEM_moveFilesIntoPlace()
+{
+  if [ $2 -eq 1 ]; then
+    mv "$1/*/*" "$1/"
+  elif [ $2 -gt 1 ]; then
+    echo "Application '$appName': in compatibility mode with tar versions \
+< 1.40, only level <=1 path stripping is supported." >&2
+    exit 1
+  fi
+}
+
+
+#
 # Call GE_showDesc for the real description, predefined in the calling
 # script
 #
@@ -444,11 +459,13 @@ GETEM_unpackFile()
       tar.gz)
         mkdir -p "$FOLDER" && \
           tar -xzf download/$FILENAME -C "$FOLDER" $TAR_STRIP_OPTION
+        [ -z "$TAR_STRIP_OPTION" ] && GETEM_moveFilesIntoPlace "$FOLDER" $LEVELS2KILL
         break
         ;;
       tar.bz2)
         mkdir -p "$FOLDER" && \
           tar -xjf download/$FILENAME -C "$FOLDER" $TAR_STRIP_OPTION
+        [ -z "$TAR_STRIP_OPTION" ] && GETEM_moveFilesIntoPlace "$FOLDER" $LEVELS2KILL
         break
         ;;
       zip)
