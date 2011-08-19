@@ -138,6 +138,8 @@ isValidApp()
     if [ "$app" = "$1" ]; then
       echo "VALID"
       break
+    else
+      echo "Application '$1' is invalid" >&2
     fi
   done
 }
@@ -149,7 +151,7 @@ isValidApp()
 getMirrorForApp()
 {
   if ! $PATH_TO_GE_SCRIPTS/$1 getmirror; then
-    usage "No mirrors available for application '$1'."
+    echo "No mirrors available for application '$1'." >&2
   fi
 }
 
@@ -182,8 +184,6 @@ displayVersionsForApp()
 {
   if [ -n "`isValidApp $1`" ]; then
     $PATH_TO_GE_SCRIPTS/$1 versions `getMirrorForApp $1`
-  else
-    usage "Application '$1' is invalid."
   fi
 }
 
@@ -238,8 +238,6 @@ displayCacheForApp()
       [ -n "$ANSWER" ] && echo $1=$ver
     done
     echo #empty line
-  else
-    usage "Application '$1' is invalid."
   fi
 }
 
@@ -294,8 +292,6 @@ downloadApp()
     else
       echo "Application $1, version $REALVERSION, has already been downloaded."
     fi
-  else
-    usage "Application '$1' is invalid."
   fi
 }
 
@@ -306,7 +302,7 @@ downloadApp()
 downloadApps()
 {
   if [ $# -eq 0 ]; then
-    echo "There are no valid chosen applications to be removed."
+    echo "There are no valid chosen applications to be removed." >&2 && exit 1
   else
     for appver in $*; do
       app=${appver%=*}
@@ -351,7 +347,7 @@ generateDownloadCommandsForApp()
 generateDownloadCommandsForApps()
 {
   if [ $# -eq 0 ]; then
-    echo "There are no valid chosen applications to be removed."
+    echo "There are no valid chosen applications to be removed." >&2 && exit 1
   else
     for appver in $*; do
       app=${appver%=*}
@@ -393,7 +389,7 @@ unpackApp()
 unpackApps()
 {
   if [ $# -eq 0 ]; then
-    echo "There are no valid chosen applications to be removed."
+    echo "There are no valid chosen applications to be removed." >&2 && exit 1
   else
     for appver in $*; do
       app=${appver%=*}
@@ -428,7 +424,7 @@ removeApp()
 removeApps()
 {
   if [ $# -eq 0 ]; then
-    echo "There are no valid chosen applications to be removed."
+    echo "There are no valid chosen applications to be removed." >&2 && exit 1
   else
     echo "Are you certain that you wish to remove the source folders for the following applications:"
     showSelectionList $*
@@ -475,7 +471,7 @@ purgeApp()
 purgeApps()
 {
   if [ $# -eq 0 ]; then
-    echo "There are no valid chosen applications to be removed."
+    echo "There are no valid chosen applications to be removed." >&2 && exit 1
   else
     echo "Are you certain that you wish to remove from cache the following applications:"
     showSelectionList $*
@@ -501,8 +497,6 @@ displayMirrorsForApp()
       echo "List of mirrors for application '$1':"
       $PATH_TO_GE_SCRIPTS/$1 listmirrors | sed -e 's=^=    ='
     fi
-  else
-    usage "Application '$1' is invalid."
   fi
 }
 
@@ -531,8 +525,6 @@ optimizeMirrorsForApp()
     else
       echo "This application '$1' doesn't need mirror list optimization."
     fi
-  else
-    usage "Application '$1' is invalid."
   fi
 }
 
@@ -564,8 +556,6 @@ pickMirrorsForApp()
       echo "This application '$1' only has one server link."
     fi
     unset MIRROR_COUNT MIRROR_POS
-  else
-    usage "Application '$1' is invalid."
   fi
 }
 
