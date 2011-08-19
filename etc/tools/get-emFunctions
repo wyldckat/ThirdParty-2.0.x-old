@@ -480,7 +480,12 @@ displayMirrorsForAll()
 optimizeMirrorsForApp()
 {
   if [ -n "`isValidApp $1`" ]; then
-    $PATH_TO_GE_SCRIPTS/$1 optmirrors
+    if [ `$PATH_TO_GE_SCRIPTS/$1 listmirrors | wc -l` -gt 1 ]; then
+      echo "Timmings for the list of mirrors for application '$1':"
+      $PATH_TO_GE_SCRIPTS/$1 optmirrors
+    else
+      echo "This application '$1' doesn't need optimization."
+    fi
   else
     usage "Application '$1' is invalid."
   fi

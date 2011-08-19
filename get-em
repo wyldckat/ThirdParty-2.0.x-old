@@ -25,7 +25,6 @@
 #   this script is an over-simplified version of any package manager.
 #
 # TODO
-#   * Ability to choose/change mirrors, when more than one site is available.
 #   * Ability to pick package format, when available: tar.gz, tar.bz2, zip
 #
 #------------------------------------------------------------------------------
