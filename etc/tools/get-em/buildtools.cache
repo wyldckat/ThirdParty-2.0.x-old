@@ -1,2 +1,2 @@
-default
-latest
+buildtools=default
+buildtools=latest

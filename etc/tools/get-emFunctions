@@ -204,6 +204,7 @@ displayVersionsForAll()
 #
 unrollAppNVer()
 {
+  [ $# -lt 2 -o "$1" = "$2" ] && echo "Missing application name or version - given: '$1'" >&2 && exit 1
   if [ -n "`isValidApp $1`" ]; then
     $PATH_TO_GE_SCRIPTS/$1 unroll $2 || exit 1
   fi
@@ -259,6 +260,7 @@ displayCacheForAll()
 #
 downloadApp()
 {
+  [ $# -lt 2 -o "$1" = "$2" ] && echo "Missing application name or version - given: '$1'" >&2 && exit 1
   if [ -n "`isValidApp $1`" ]; then
     MIRRORURL=`getMirrorForApp $1`
     REALVERSION=`$PATH_TO_GE_SCRIPTS/$1 getversion $MIRRORURL $2`
@@ -303,11 +305,15 @@ downloadApp()
 #
 downloadApps()
 {
-  for appver in $*; do
-    app=${appver%=*}
-    ver=${appver##*=}
-    downloadApp $app $ver
-  done
+  if [ $# -eq 0 ]; then
+    echo "There are no valid chosen applications to be removed."
+  else
+    for appver in $*; do
+      app=${appver%=*}
+      ver=${appver##*=}
+      downloadApp $app $ver
+    done
+  fi
 }
 
 
@@ -317,6 +323,7 @@ downloadApps()
 #
 generateDownloadCommandsForApp()
 {
+  [ $# -lt 2 -o "$1" = "$2" ] && echo "Missing application name or version - given: '$1'" >&2 && exit 1
   if [ -n "`isValidApp $1`" ]; then
     MIRRORURL=`getMirrorForApp $1`
     REALVERSION=`$PATH_TO_GE_SCRIPTS/$1 getversion $MIRRORURL $2`
@@ -343,11 +350,15 @@ generateDownloadCommandsForApp()
 #
 generateDownloadCommandsForApps()
 {
-  for appver in $*; do
-    app=${appver%=*}
-    ver=${appver##*=}
-    generateDownloadCommandsForApp $app $ver
-  done
+  if [ $# -eq 0 ]; then
+    echo "There are no valid chosen applications to be removed."
+  else
+    for appver in $*; do
+      app=${appver%=*}
+      ver=${appver##*=}
+      generateDownloadCommandsForApp $app $ver
+    done
+  fi
 }
 
 
@@ -356,6 +367,7 @@ generateDownloadCommandsForApps()
 #
 unpackApp()
 {
+  [ $# -lt 2 -o "$1" = "$2" ] && echo "Missing application name or version - given: '$1'" >&2 && exit 1
   if [ -n "`isValidApp $1`" ]; then
     MIRRORURL=`getMirrorForApp $1`
     REALVERSION=`$PATH_TO_GE_SCRIPTS/$1 getversion $MIRRORURL $2`
@@ -380,11 +392,15 @@ unpackApp()
 #
 unpackApps()
 {
-  for appver in $*; do
-    app=${appver%=*}
-    ver=${appver##*=}
-    unpackApp $app $ver
-  done
+  if [ $# -eq 0 ]; then
+    echo "There are no valid chosen applications to be removed."
+  else
+    for appver in $*; do
+      app=${appver%=*}
+      ver=${appver##*=}
+      unpackApp $app $ver
+    done
+  fi
 }
 
 
@@ -393,6 +409,7 @@ unpackApps()
 #
 removeApp()
 {
+  [ $# -lt 2 -o "$1" = "$2" ] && echo "Missing application name or version - given: '$1'" >&2 && exit 1
   if [ -n "`isValidApp $1`" ]; then
     MIRRORURL=`getMirrorForApp $1`
     REALVERSION=`$PATH_TO_GE_SCRIPTS/$1 getversion $MIRRORURL $2`
@@ -410,15 +427,19 @@ removeApp()
 #
 removeApps()
 {
-  echo "Are you certain that you wish to remove the source folders for the following applications:"
-  showSelectionList $*
-  theQuestion
-  if [ $THE_ANSWER -eq 1 ]; then
-    for appver in $*; do
-      app=${appver%=*}
-      ver=${appver##*=}
-      removeApp $app $ver
-    done
+  if [ $# -eq 0 ]; then
+    echo "There are no valid chosen applications to be removed."
+  else
+    echo "Are you certain that you wish to remove the source folders for the following applications:"
+    showSelectionList $*
+    theQuestion
+    if [ $THE_ANSWER -eq 1 ]; then
+      for appver in $*; do
+        app=${appver%=*}
+        ver=${appver##*=}
+        removeApp $app $ver
+      done
+    fi
   fi
 }
 
@@ -428,6 +449,7 @@ removeApps()
 #
 purgeApp()
 {
+  [ $# -lt 2 -o "$1" = "$2" ] && echo "Missing application name or version - given: '$1'" >&2 && exit 1
   if [ -n "`isValidApp $1`" ]; then
     MIRRORURL=`getMirrorForApp $1`
     REALVERSION=`$PATH_TO_GE_SCRIPTS/$1 getversion $MIRRORURL $2`
@@ -452,15 +474,19 @@ purgeApp()
 #
 purgeApps()
 {
-  echo "Are you certain that you wish to remove from cache the following applications:"
-  showSelectionList $*
-  theQuestion
-  if [ $THE_ANSWER -eq 1 ]; then
-    for appver in $*; do
-      app=${appver%=*}
-      ver=${appver##*=}
-      purgeApp $app $ver
-    done
+  if [ $# -eq 0 ]; then
+    echo "There are no valid chosen applications to be removed."
+  else
+    echo "Are you certain that you wish to remove from cache the following applications:"
+    showSelectionList $*
+    theQuestion
+    if [ $THE_ANSWER -eq 1 ]; then
+      for appver in $*; do
+        app=${appver%=*}
+        ver=${appver##*=}
+        purgeApp $app $ver
+      done
+    fi
   fi
 }
 

@@ -47,8 +47,8 @@ GE_showDesc()
 #
 GE_update()
 {
-  echo default > $versionCacheFile
-  echo latest >> $versionCacheFile
+  echo $appName=default > $versionCacheFile
+  echo $appName=latest >> $versionCacheFile
 }
 
 

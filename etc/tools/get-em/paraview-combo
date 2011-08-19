@@ -24,7 +24,7 @@
 #------------------------------------------------------------------------------
 
 #redundance for default version translation
-PVCOMBO_VERSION=default
+PVCOMBO_VERSION="default"
 
 versionVar="PVCOMBO_VERSION"
 appName="paraview-combo"
@@ -47,8 +47,8 @@ GE_showDesc()
 #
 GE_update()
 {
-  echo default > $versionCacheFile
-  echo latest >> $versionCacheFile
+  echo $appName=default > $versionCacheFile
+  echo $appName=latest >> $versionCacheFile
 }
 
 
