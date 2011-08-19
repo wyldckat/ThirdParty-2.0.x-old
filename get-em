@@ -59,21 +59,20 @@ usage() {
     cat<<USAGE
 
 Usage
-    Must be executed from the ThirdParty folder and OpenFOAM's environment
-  must be active. Usage:
-     ./$Script li(st)
-     ./$Script up(date) [APPLICATION]
-     ./$Script ve(rsions) [APPLICATION]
-     ./$Script ca(che) [APPLICATION]
-     ./$Script so(urce) APPLICATION1=VERSION [APPLICATION2=VERSION] [...]
-     ./$Script do(wnload) APPLICATION1=VERSION [APPLICATION2=VERSION] [...]
-     ./$Script od(ownload) APPLICATION1=VERSION [APPLICATION2=VERSION] [...]
-     ./$Script un(pack) APPLICATION1=VERSION [APPLICATION2=VERSION] [...]
-     ./$Script re(move) APPLICATION1=VERSION [APPLICATION2=VERSION] [...]
-     ./$Script pu(rge) APPLICATION1=VERSION [APPLICATION2=VERSION] [...]
-     ./$Script mi(rrors) [APPLICATION]
-     ./$Script mi(rrors)-opt(imize) [APPLICATION]
-     ./$Script mi(rrors)-pick [APPLICATION]
+  Must be executed from the ThirdParty folder and OpenFOAM's environment must be active. Usage:
+    ./$Script li(st)
+    ./$Script up(date) [APPLICATION]
+    ./$Script ve(rsions) [APPLICATION]
+    ./$Script ca(che) [APPLICATION]
+    ./$Script so(urce) APPLICATION1=VERSION [APPLICATION2=VERSION] [...]
+    ./$Script do(wnload) APPLICATION1=VERSION [APPLICATION2=VERSION] [...]
+    ./$Script od(ownload) APPLICATION1=VERSION [APPLICATION2=VERSION] [...]
+    ./$Script un(pack) APPLICATION1=VERSION [APPLICATION2=VERSION] [...]
+    ./$Script re(move) APPLICATION1=VERSION [APPLICATION2=VERSION] [...]
+    ./$Script pu(rge) APPLICATION1=VERSION [APPLICATION2=VERSION] [...]
+    ./$Script mi(rrors) [APPLICATION]
+    ./$Script mi(rrors)-opt(imize) [APPLICATION]
+    ./$Script mi(rrors)-pick [APPLICATION]
 
 Valid options (use only one per command)
   list     : shows a list of the retrievable software applications.
