@@ -73,6 +73,7 @@ Usage
      ./$Script pu(rge) APPLICATION1=VERSION [APPLICATION2=VERSION] [...]
      ./$Script mi(rrors) [APPLICATION]
      ./$Script mi(rrors)-opt(imize) [APPLICATION]
+     ./$Script mi(rrors)-pick [APPLICATION]
 
 Valid options (use only one per command)
   list     : shows a list of the retrievable software applications.
@@ -85,8 +86,9 @@ Valid options (use only one per command)
   unpack   : unpack (if available) the desired applications and respective versions.
   remove   : remove the unpacked folders the desired applications and respective versions.
   purge    : remove from the cache the downloaded packages for the desired applications and respective versions.
-  mirrors  : list the mirrors available for one or all applications.
-  mi-opt    : find the closest mirror to be used for one or all applications.
+  mirrors  : list the server mirrors available for one or all applications.
+  mi-opt   : find the closest server mirror to be used for one or all applications.
+  mi-pick  : pick another server mirror manually for one or all applications.
 
 Special application markers and versions
   APP=default   : APP is the name of the desired application, therefore downloading the pre-defined default version.
@@ -183,6 +185,14 @@ mi-opt | mirrors-opt | mi-optimize | mirrors-optimize)
     optimizeMirrorsForApp $2
   else
     optimizeMirrorsForAll
+  fi
+  ;;
+mi-pick | mirrors-pick)
+  [ "$#" -gt 2 ] && usage "Too many arguments..."
+  if [ "$#" -eq 2 ]; then
+    pickMirrorsForApp $2
+  else
+    pickMirrorsForAll
   fi
   ;;
 *)

@@ -66,9 +66,28 @@ theQuestion()
     *)
       echo Invalid answer...
       THE_ANSWER=""
-      break
       ;;
     esac
+  done
+}
+
+
+#
+# Receive maximum mirror count $1.
+# Return the mirror number in the variable $THE_ANSWER.
+#
+requestMirrorNumber()
+{
+  THE_ANSWER=""
+  while [ -z "$THE_ANSWER" ]; do
+    echo "Indicate which mirror number you choose:"
+    read THE_ANSWER
+    if [ -n "$THE_ANSWER" ] && [ $THE_ANSWER -gt 0 -a $THE_ANSWER -le $1 ]; then
+      break;
+    else
+      echo Invalid value...
+      THE_ANSWER=""
+    fi
   done
 }
 
@@ -447,7 +466,7 @@ purgeApps()
 
 
 #
-# show the list of mirrors for the chosen application
+# show the list of mirrors for the chosen application $1
 #
 displayMirrorsForApp()
 {
@@ -474,7 +493,7 @@ displayMirrorsForAll()
 
 
 #
-# optimize the list of mirrors for the chosen application
+# optimize the list of mirrors for the chosen application $1
 # In other words, sort the list of mirrors in order of the closest mirror.
 #
 optimizeMirrorsForApp()
@@ -499,6 +518,39 @@ optimizeMirrorsForAll()
 {
   for app in $GE_VALID_APPS; do
     optimizeMirrorsForApp $app
+  done
+}
+
+
+#
+# pick from one mirror from the list of mirrors the application $1
+#
+pickMirrorsForApp()
+{
+  if [ -n "`isValidApp $1`" ]; then
+    MIRROR_COUNT=`$PATH_TO_GE_SCRIPTS/$1 listmirrors | wc -l`
+    if [ $MIRROR_COUNT -gt 1 ]; then
+      echo "Pick from the list of mirrors for application '$1':"
+      $PATH_TO_GE_SCRIPTS/$1 listmirrors | grep -n -e ".*"
+      requestMirrorNumber $MIRROR_COUNT
+      $PATH_TO_GE_SCRIPTS/$1 pickmirror $THE_ANSWER
+    else
+      echo "This application '$1' only has one server link."
+    fi
+    unset MIRROR_COUNT MIRROR_POS
+  else
+    usage "Application '$1' is invalid."
+  fi
+}
+
+
+#
+# pick from one mirror from the list of mirrors for the all applications
+#
+pickMirrorsForAll()
+{
+  for app in $GE_VALID_APPS; do
+    pickMirrorsForApp $app
   done
 }
 

@@ -78,6 +78,7 @@ Usage
      $Script getmirror
      $Script listmirrors
      $Script optmirrors
+     $Script pickmirror POSITION
      $Script geturl MIRROR_URL VERSION
      $Script getversion MIRROR_URL VERSION
      $Script getfilename VERSION
@@ -94,6 +95,7 @@ Valid options (use only one per command)
   getmirror            show the first mirror in the list.
   listmirrors          show the list of mirrors.
   optmirrors           optimize the list of mirrors.
+  pickmirror POSITION  pick a mirror position from the list.
   geturl MIRROR_URL VERSION      get the link for the desired version to download.
   getversion MIRROR_URL VERSION  get the true version.
   getfilename VERSION  get the filename for the desired version (true version only).
@@ -220,6 +222,24 @@ GETEM_optmirrors()
       echo $timednow $mirror >> $testFile
       sort -hr $testFile | sed -e 's=^.* ==' > $serverMirrorFile
     done
+    [ -r $testFile ] && rm $testFile
+  fi
+}
+
+
+#
+# Pick a mirror $1 from the mirror list by closest to farthest.
+#
+GETEM_pickmirror()
+{
+  [ "$#" -lt 1 ] && GETEM_usage "Missing POSITION for mirror picking."
+  MIRRORCOUNT=`cat $serverMirrorFile | wc -l`
+  if [ $MIRRORCOUNT -gt 1 -a $1 -ge 1 -a $1 -lt $MIRRORCOUNT ]; then
+    [ -r $testFile ] && rm $testFile
+    mirror=`cat $serverMirrorFile | sed -n $1'p'`
+    echo $mirror > $testFile
+    grep -v "$mirror" $serverMirrorFile >> $testFile
+    cat $testFile > $serverMirrorFile
     [ -r $testFile ] && rm $testFile
   fi
 }
@@ -468,7 +488,8 @@ update)      GETEM_update $2 $3 ;;
 versions)    GETEM_versions $2 $3 ;;
 getmirror)   GETEM_getmirror ;;
 listmirrors) GETEM_listmirrors ;;
-optmirrors) GETEM_optmirrors ;;
+optmirrors)  GETEM_optmirrors ;;
+pickmirror)  GETEM_pickmirror $2 ;;
 geturl)      GETEM_geturl $2 $3 ;;
 unroll)      GETEM_unroll $2 ;;
 getversion)  GETEM_getversion $2 $3 ;;
